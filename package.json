@@ -4,9 +4,13 @@
   "description": "",
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=10"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build --watch --webpack",
+    "build:prod": "nest build",
     "start": "node dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "nest start --watch",

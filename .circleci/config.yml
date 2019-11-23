@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  test-job:
+    docker:
+      - image: circleci/node:12-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          key: node-modules-{{ .Branch }}-{{ checksum "package-lock.json" }}
+      - run: npm ci
+      - run: npm run build:prod
+      - save_cache:
+          paths:
+            - node_modules
+          key: node-modules-{{ .Branch }}-{{ checksum "package-lock.json" }}
+
+      # Run tests
+      - run: npm run test -- --no-watch --no-progress
+      - persist_to_workspace:
+          root: ~/project
+          paths: ./*
