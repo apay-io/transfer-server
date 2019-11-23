@@ -9,8 +9,8 @@
   },
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "nest build --watch --webpack",
-    "build:prod": "nest build",
+    "build": "nest build",
+    "build:dev": "nest build --watch --webpack",
     "start": "node dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "nest start --watch",

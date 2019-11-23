@@ -8,7 +8,7 @@ jobs:
       - restore_cache:
           key: node-modules-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - run: npm ci
-      - run: npm run build:prod
+      - run: npm run build
       - save_cache:
           paths:
             - node_modules
