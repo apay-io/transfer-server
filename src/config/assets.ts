@@ -1,1 +1,6 @@
-export default JSON.parse(require('fs').readFileSync(process.cwd() + '/assets.json', 'utf8'));
+import {existsSync, readFileSync} from 'fs';
+const file = process.cwd() + '/assets.json';
+
+export default JSON.parse(existsSync(file)
+    ? readFileSync(file, 'utf8')
+    : readFileSync(file + '.example', 'utf8'));
