@@ -1,0 +1,13 @@
+[
+    {
+        "code": "TEST",
+        "stellar": {
+            "issuer": "",
+            "name": "",
+            "desc": "",
+            "image": "",
+            "status": "live"
+        },
+        "distributor": ""
+    }
+]

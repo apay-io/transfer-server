@@ -9,11 +9,14 @@ Before running the project, follow the following steps to customize your environ
 
 ```
 cp .env.example .env
+cp assets.json.example assets.json
 ```
 
-adjust values in `.env` according to your preferences
+adjust values in `.env` and `assets.json` according to your preferences
 
 ```
 npm i
 npm start
 ```
+
+Run `node bootstrap.js` before `npm start` if you need to create accounts
