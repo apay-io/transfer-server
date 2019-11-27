@@ -16,7 +16,14 @@ adjust values in `.env` and `assets.json` according to your preferences
 
 ```
 npm i
+npm run build:dev
 npm start
 ```
 
 Run `node bootstrap.js` before `npm start` if you need to create accounts
+
+
+## Security vulnerability disclosure
+Please report suspected security vulnerabilities in private to security@apay.io 
+
+Please do NOT create publicly viewable issues for suspected security vulnerabilities.

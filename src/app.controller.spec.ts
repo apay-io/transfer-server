@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import {ConfigModule, ConfigService} from "nestjs-config";
-import * as path from "path";
+import { ConfigModule, ConfigService } from 'nestjs-config';
+import * as path from 'path';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -12,8 +12,8 @@ describe('AppController', () => {
       controllers: [AppController],
       imports: [
         ConfigModule.load(
-            path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-            {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
+          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
+          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
         ),
       ],
       providers: [AppService],
@@ -28,11 +28,12 @@ describe('AppController', () => {
     });
 
     it('should generate stellar.toml', () => {
-      const fakeReq = { headers: { host: 'https://apay.io'}};
+      const fakeReq = {headers: {host: 'https://apay.io'}};
+      const response = appController.getStellarToml(fakeReq);
 
-      expect(appController.getStellarToml(fakeReq)).toContain('TRANSFER_SERVER="https://apay.io"');
-      expect(appController.getStellarToml(fakeReq)).toContain('[[CURRENCIES]]');
-      expect(appController.getStellarToml(fakeReq)).toContain('status="live"');
+      expect(response).toContain('TRANSFER_SERVER="https://apay.io"');
+      expect(response).toContain('[[CURRENCIES]]');
+      expect(response).toContain('status="live"');
     });
   });
 });
