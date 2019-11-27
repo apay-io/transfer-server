@@ -49,9 +49,7 @@ export class TransactionsController {
     }
     const tx = await this.transactionsService.findOne(transactionFilterDto);
     if (!tx) {
-      return response.status(404).send({
-        error: 'Transaction not found',
-      });
+      return response.status(404);
     }
     return {
       transaction: {
