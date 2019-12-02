@@ -41,4 +41,12 @@ export interface AssetInterface {
     approval_criteria?: string;
   };
   distributor: string;
+  deposit: {
+    min?: number;
+    max?: number;
+    fee_fixed?: number;
+    fee_percent?: number;
+    fee_create?: number;
+    eta?: number;
+  };
 }
