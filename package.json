@@ -29,6 +29,7 @@
     "@nestjs/platform-express": "^6.7.2",
     "@nestjs/typeorm": "^6.2.0",
     "@types/dotenv": "^6.1.1",
+    "bitgo": "^9.0.1",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.11.0",
     "nestjs-config": "^1.4.4",

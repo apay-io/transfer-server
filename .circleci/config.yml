@@ -8,6 +8,7 @@ jobs:
       - restore_cache:
           key: node-modules-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - run: npm ci
+      - run: cp .circleci/algo.d.ts node_modules/bitgo/dist/types/src/v2/coins/algo.d.ts
       - run: npm run build
       - save_cache:
           paths:

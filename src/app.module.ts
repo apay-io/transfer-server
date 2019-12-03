@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TransactionsModule } from './transactions/transactions.module';
+import { NonInteractiveModule } from './non-interactive/non-interactive.module';
+import { WalletsModule } from './wallets/wallets.module';
 import * as path from 'path';
 
 @Module({
@@ -17,6 +19,8 @@ import * as path from 'path';
       inject: [ConfigService],
     }),
     TransactionsModule,
+    NonInteractiveModule,
+    WalletsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
