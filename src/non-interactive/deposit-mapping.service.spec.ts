@@ -77,7 +77,7 @@ describe('DepositMappingService', () => {
       const spy = spyOn(bitgoDriver, 'getNewAddress').and.returnValue(null);
       const spy2 = spyOn(repo, 'findOne').and.returnValue({
         addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
-        addressInExtra: null,
+        id: 1,
       });
 
       expect(await depositMappingService.getDepositAddress(
@@ -90,12 +90,11 @@ describe('DepositMappingService', () => {
     });
 
     it('return valid response if mapping doesnt exist', async () => {
-      const spy = spyOn(bitgoDriver, 'getNewAddress').and.returnValue(Promise.resolve({
-        addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
-        addressInExtra: null,
-      }));
+      const spy = spyOn(bitgoDriver, 'getNewAddress').and.returnValue(
+        Promise.resolve('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
+      ));
       const spy2 = spyOn(repo, 'findOne').and.returnValue(null);
-      const spy3 = spyOn(repo, 'save').and.returnValue(null);
+      const spy3 = spyOn(repo, 'save').and.returnValue({ id: 1 });
 
       expect(await depositMappingService.getDepositAddress(
         'TBTC',
@@ -109,11 +108,11 @@ describe('DepositMappingService', () => {
       expect(spy3.calls.argsFor(0)).toStrictEqual([{
         asset: 'TBTC',
         addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
-        addressInExtra: null,
         addressOut: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
         addressOutExtra: null,
         addressOutExtraType: null,
         email: null,
+        id: 1,
       }]);
     });
 

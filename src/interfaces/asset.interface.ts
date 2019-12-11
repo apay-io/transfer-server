@@ -49,4 +49,11 @@ export interface AssetInterface {
     fee_create?: number;
     eta?: number;
   };
+  withdrawal: {
+    min?: number;
+    max?: number;
+    fee_fixed?: number;
+    fee_percent?: number;
+    eta?: number;
+  };
 }

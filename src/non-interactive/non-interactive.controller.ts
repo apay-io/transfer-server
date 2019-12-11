@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { DepositDto } from './dto/deposit.dto';
 import { DepositResponseDto } from './dto/deposit-response.dto';
@@ -6,6 +6,10 @@ import { AssetInterface } from '../interfaces/asset.interface';
 import { StellarService } from './stellar.service';
 import { DepositMappingService } from './deposit-mapping.service';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { WithdrawDto } from './dto/withdraw.dto';
+import { WithdrawalResponseDto } from './dto/withdrawal-response.dto';
+import { MemoID } from 'stellar-sdk';
+import { WithdrawalMappingService } from './withdrawal-mapping.service';
 
 @Controller()
 export class NonInteractiveController {
@@ -14,6 +18,7 @@ export class NonInteractiveController {
     private readonly config: ConfigService,
     private readonly stellarService: StellarService,
     private readonly depositMappingService: DepositMappingService,
+    private readonly withdrawalMappingService: WithdrawalMappingService,
   ) {
   }
 
@@ -22,7 +27,7 @@ export class NonInteractiveController {
   async deposit(
     @Body() depositDto: DepositDto,
   ): Promise<DepositResponseDto> {
-    const asset: AssetInterface = this.config.get('assets').find((item) => item.code === depositDto.asset_code);
+    const asset = this.getAssetConfig(depositDto.asset_code);
     const { exists, trusts } = await this.stellarService.checkAccount(
       depositDto.account,
       asset.code,
@@ -53,5 +58,32 @@ export class NonInteractiveController {
           + (trusts ? `` : `You need to establish a trustline for asset ${asset.code} to account ${asset.stellar.issuer}`),
       },
     };
+  }
+
+  @Post('transactions/withdraw/non-interactive')
+  @UseInterceptors(AnyFilesInterceptor())
+  async withdraw(
+      @Body() withdrawDto: WithdrawDto,
+  ): Promise<WithdrawalResponseDto> {
+    const asset = this.getAssetConfig(withdrawDto.asset_code);
+    const withdrawalMapping = await this.withdrawalMappingService.getWithdrawalMapping(
+        asset,
+        withdrawDto.dest,
+        withdrawDto.dest_extra,
+    );
+    return {
+      account_id: withdrawalMapping.addressIn,
+      memo_type: MemoID,
+      memo: withdrawalMapping.id.toString(),
+      eta: asset.withdrawal.eta,
+      min_amount: asset.withdrawal.min,
+      max_amount: asset.withdrawal.max,
+      fee_fixed: asset.withdrawal.fee_fixed,
+      fee_percent: asset.withdrawal.fee_percent,
+    } as WithdrawalResponseDto;
+  }
+
+  private getAssetConfig(assetCode: string): AssetInterface {
+    return this.config.get('assets').find((item) => item.code === assetCode);
   }
 }

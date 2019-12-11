@@ -10,6 +10,8 @@ import * as path from 'path';
 import assets from '../src/config/assets';
 import { TransactionState } from '../src/transactions/enums/transaction-state.enum';
 import { TransactionType } from '../src/transactions/enums/transaction-type.enum';
+import { TempTransactionsService } from '../src/transactions/temp-transactions.service';
+import { TempTransaction } from '../src/transactions/temp-transaction.entity';
 
 describe('TransactionsController (e2e) /GET transactions', () => {
   let app: INestApplication;
@@ -17,7 +19,9 @@ describe('TransactionsController (e2e) /GET transactions', () => {
     find: () => [],
     findOne: () => null,
   };
-  const txsRepo = {};
+  const tempTxsService = {
+    save: () => {},
+  };
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -30,9 +34,13 @@ describe('TransactionsController (e2e) /GET transactions', () => {
       ],
     })
       .overrideProvider(getRepositoryToken(Transaction))
-      .useValue(txsRepo)
+      .useValue({})
+      .overrideProvider(getRepositoryToken(TempTransaction))
+      .useValue({})
       .overrideProvider(TransactionsService)
       .useValue(txsService)
+      .overrideProvider(TempTransactionsService)
+      .useValue(tempTxsService)
       .compile();
 
     app = module.createNestApplication();

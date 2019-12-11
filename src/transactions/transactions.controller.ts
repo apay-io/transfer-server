@@ -1,16 +1,19 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Query, Res } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionsService } from './transactions.service';
 import { TransactionDto } from './dto/transaction.dto';
 import { Transaction } from './transaction.entity';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
+import { TxNotificationDto } from './dto/tx-notification.dto';
+import { TempTransactionsService } from './temp-transactions.service';
 
 @Controller()
 export class TransactionsController {
   constructor(
     @InjectConfig()
     private readonly config: ConfigService,
+    private readonly tempTransactionsService: TempTransactionsService,
     private readonly transactionsService: TransactionsService,
   ) {
   }
@@ -60,5 +63,28 @@ export class TransactionsController {
 
       } as TransactionDto,
     };
+  }
+
+  /**
+   * This endpoint is for internal use only.
+   * It is not safe to have it exposed to the internet, that's why we require a secret
+   * Notifies system about incoming tx. We're saving tx into temp pool until our node confirms it's valid
+   * @param chain - chain code, valid values are btc, xlm, eth and other
+   * @param secret
+   * @param txNotificationDto must contain tx hash
+   */
+  @Post('notify/:chain/:secret')
+  async notify(
+    @Param('chain') chain: string,
+    @Param('secret') secret: string,
+    @Body() txNotificationDto: TxNotificationDto,
+  ) {
+    if (this.config.get('app').notificationSecrets.indexOf(secret) === -1) {
+      throw new ForbiddenException('Invalid secret');
+    }
+    return this.tempTransactionsService.save(
+      chain,
+      txNotificationDto,
+    );
   }
 }
