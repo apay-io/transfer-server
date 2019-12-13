@@ -12,24 +12,28 @@ export class BitgoDriver {
   ) {
   }
 
-  async getNewAddress(asset): Promise<{ addressIn: string, addressInExtra: string}> {
+  async getNewAddress(asset): Promise<string> {
     const wallet = await this.getWallet(asset);
     const bitGoAddress = await wallet.createAddress({ chain: 20 });
-    return {
-      addressIn: bitGoAddress.address,
-      addressInExtra: null,
-    };
+    return bitGoAddress.address;
   }
 
-  private async getWallet(asset): Promise<Wallet> {
+  private getCoin(asset) {
     if (!this.bitgo) {
       this.bitgo = new BitGo({
         env: this.config.get('bitgo').env,
         accessToken: this.config.get('bitgo').accessToken,
       });
     }
-    const coin = asset.toLowerCase();
-    return this.bitgo.coin(coin).wallets()
-      .get({id: this.config.get('bitgo').walletIds[coin]});
+    return this.bitgo.coin(asset.toLowerCase());
+  }
+
+  private async getWallet(asset): Promise<Wallet> {
+    return this.getCoin(asset).wallets()
+      .get({id: this.config.get('bitgo').walletIds[asset.toLowerCase()]});
+  }
+
+  isValidDestination(asset: string, addressOut: string, addressOutExtra: string) {
+    return this.getCoin(asset).isValidAddress(addressOut);
   }
 }

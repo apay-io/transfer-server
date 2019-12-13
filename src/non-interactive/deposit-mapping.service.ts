@@ -25,14 +25,14 @@ export class DepositMappingService {
       asset, addressOut, addressOutExtraType, addressOutExtra, email,
     });
     if (!mapping) {
-      const { addressIn, addressInExtra } = await this.walletFactory.get(asset).getNewAddress(asset);
+      const addressIn = await this.walletFactory.get(asset).getNewAddress(asset);
       mapping = this.repo.create({
-        asset, addressIn, addressInExtra, addressOut, addressOutExtra, addressOutExtraType, email,
+        asset, addressIn, addressOut, addressOutExtra, addressOutExtraType, email,
       });
-      console.log(mapping);
-      await this.repo.save(mapping);
+      const { id } = await this.repo.save(mapping);
+      mapping.id = id;
     }
-    return DepositMappingService.getDepositAddressString(asset, mapping.addressIn, mapping.addressInExtra);
+    return DepositMappingService.getDepositAddressString(asset, mapping.addressIn, mapping.id.toString());
   }
 
   private static getDepositAddressString(asset: string, addressIn: string, addressInExtra: string) {

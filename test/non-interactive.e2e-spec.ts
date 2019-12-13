@@ -1,26 +1,48 @@
 import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { ConfigModule } from 'nestjs-config';
+import { ConfigModule, ConfigService } from 'nestjs-config';
 import * as path from 'path';
 import { NonInteractiveModule } from '../src/non-interactive/non-interactive.module';
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { BitgoDriver } from '../src/wallets/drivers/bitgo.driver';
+import { WalletFactoryService } from '../src/wallets/wallet-factory.service';
+
+const BitgoDriverMock = jest.fn(() => ({
+  getNewAddress: () => '',
+  isValidDestination: () => true,
+}));
+
 
 describe('NonInteractiveController (e2e)', () => {
   let app: INestApplication;
+  let bitgoDriver;
+  const WalletFactoryServiceMock = jest.fn(() => ({
+    get: () => bitgoDriver,
+  }));
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
+          path.resolve(__dirname, '../src/config/**/!(*.d).{ts,js}'),
           {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
         ),
+        TypeOrmModule.forRootAsync({
+          useFactory: (config: ConfigService) => config.get('database'),
+          inject: [ConfigService],
+        }),
         NonInteractiveModule,
       ],
     })
+      .overrideProvider(BitgoDriver)
+      .useClass(BitgoDriverMock)
+      .overrideProvider(WalletFactoryService)
+      .useClass(WalletFactoryServiceMock)
       .compile();
 
     app = module.createNestApplication();
+    bitgoDriver = app.get<BitgoDriver>(BitgoDriver);
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
   });
@@ -35,7 +57,7 @@ describe('NonInteractiveController (e2e)', () => {
       .expect(201);
   });
 
-  it(`POST /transactions/deposit/non-interactive missing`, () => {
+  it(`POST /transactions/deposit/non-interactive missin paramg`, () => {
     return request(app.getHttpServer())
       .post('/transactions/deposit/non-interactive')
       .send({
@@ -50,7 +72,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'NONE',
+        memo_type: 'none',
         memo: 'TEST',
       })
       .expect(400);
@@ -62,7 +84,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'ID',
+        memo_type: 'id',
       })
       .expect(400);
   });
@@ -73,7 +95,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'ID',
+        memo_type: 'id',
         memo: 'asd',
       })
       .expect(400);
@@ -85,7 +107,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'ID',
+        memo_type: 'id',
         memo: 123,
       })
       .expect(201);
@@ -97,11 +119,12 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'TEXT',
+        memo_type: 'text',
         memo: '',
       })
       .expect(201);
   });
+  // todo: test to check memo is getting trimmed
 
   it(`POST /transactions/deposit/non-interactive memo TEXT incorrect`, () => {
     return request(app.getHttpServer())
@@ -109,7 +132,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'TEXT',
+        memo_type: 'text',
         memo: '123456789012345678901234567890',
       })
       .expect(400);
@@ -121,7 +144,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'TEXT',
+        memo_type: 'text',
         memo: '1234567890123456789012345678',
       })
       .expect(201);
@@ -133,7 +156,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'HASH',
+        memo_type: 'hash',
         memo: 'd8a928b2043db77e340b523547bf16cb4aa483f0645fe0a290ed1f20aab7625',
       })
       .expect(400);
@@ -145,7 +168,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'HASH',
+        memo_type: 'hash',
         memo: 'd8a928b2043db77e340b523547bf16cb4aa483f0645fe0a290ed1f20aab76257',
       })
       .expect(201);
@@ -157,7 +180,7 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'RETURN',
+        memo_type: 'return',
         memo: '1234567890123456789012345678',
       })
       .expect(400);
@@ -169,10 +192,51 @@ describe('NonInteractiveController (e2e)', () => {
       .send({
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-        memo_type: 'RETURN',
+        memo_type: 'return',
         memo: 'd8a928b2043db77e340b523547bf16cb4aa483f0645fe0a290ed1f20aab76257',
       })
       .expect(201);
+  });
+
+  it(`POST /transactions/withdraw/non-interactive correct params`, () => {
+    return request(app.getHttpServer())
+      .post('/transactions/withdraw/non-interactive')
+      .send({
+        asset_code: 'TBTC',
+        dest: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
+        type: 'crypto',
+      })
+      .expect(201);
+  });
+
+  it(`POST /transactions/withdraw/non-interactive missing type`, () => {
+    return request(app.getHttpServer())
+      .post('/transactions/withdraw/non-interactive')
+      .send({
+        asset_code: 'TEST',
+        dest: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
+      })
+      .expect(400);
+  });
+
+  it(`POST /transactions/withdraw/non-interactive missing asset_code`, () => {
+    return request(app.getHttpServer())
+      .post('/transactions/withdraw/non-interactive')
+      .send({
+        dest: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
+        type: 'crypto',
+      })
+      .expect(400);
+  });
+
+  it(`POST /transactions/withdraw/non-interactive missing dest`, () => {
+    return request(app.getHttpServer())
+      .post('/transactions/withdraw/non-interactive')
+      .send({
+        asset_code: 'TEST',
+        type: 'crypto',
+      })
+      .expect(400);
   });
 
   afterAll(async () => {

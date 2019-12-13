@@ -2,13 +2,12 @@ import {
   Entity,
   Column,
   CreateDateColumn,
-  PrimaryGeneratedColumn, Generated,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TrimStringTransformer } from '../transformers/trim-string.transformer';
-import { MemoType, MemoReturn, MemoHash, MemoText, MemoID } from 'stellar-sdk';
 
 @Entity()
-export class DepositMapping {
+export class WithdrawalMapping {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,6 +20,7 @@ export class DepositMapping {
   @Column({
     length: 255,
     nullable: false,
+    transformer: new TrimStringTransformer(),
   })
   addressOut: string;
 
@@ -31,27 +31,9 @@ export class DepositMapping {
   })
   addressOutExtra: string;
 
-  @Column({
-    type: 'enum',
-    enum: [
-      MemoID,
-      MemoText,
-      MemoHash,
-      MemoReturn,
-    ],
-    nullable: true,
-  })
-  addressOutExtraType: MemoType;
-
   @Column({length: 255, nullable: false})
   asset: string;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @Column({
-    length: 255,
-    nullable: true,
-  })
-  email: string;
 }

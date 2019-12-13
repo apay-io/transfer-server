@@ -7,10 +7,14 @@ import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
+import { TempTransactionsService } from './temp-transactions.service';
 
 const mockService = jest.fn(() => ({
   find: () => [],
   findOne: () => null,
+}));
+const mockTempService = jest.fn(() => ({
+  save: (chain, dto) => dto,
 }));
 
 describe('TransacionsController', () => {
@@ -28,6 +32,7 @@ describe('TransacionsController', () => {
       ],
       providers: [
         { provide: TransactionsService, useClass: mockService },
+        { provide: TempTransactionsService, useClass: mockTempService },
       ],
     }).compile();
 

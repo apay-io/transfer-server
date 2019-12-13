@@ -4,9 +4,14 @@ import { NonInteractiveController } from './non-interactive.controller';
 import { DepositMappingService } from './deposit-mapping.service';
 import { StellarService } from './stellar.service';
 import { DepositDto } from './dto/deposit.dto';
+import { WithdrawalMappingService } from './withdrawal-mapping.service';
+import { WithdrawDto } from './dto/withdraw.dto';
 
 const mockService = jest.fn(() => ({
   getDepositAddress: () => '',
+}));
+const withdrawalsServiceMock = jest.fn(() => ({
+  getWithdrawalMapping: () => {},
 }));
 const StellarServiceMock = jest.fn(() => ({
   checkAccount: () => '',
@@ -35,6 +40,12 @@ const ConfigServiceMock = jest.fn(() => ({
             fee_fixed: 0.0001,
             fee_percent: 0.001,
           },
+          withdrawal: {
+            eta: 1200,
+            min: 0.0002,
+            fee_fixed: 0.0001,
+            fee_percent: 0.001,
+          },
         },
       ],
       stellar: {
@@ -47,6 +58,7 @@ const ConfigServiceMock = jest.fn(() => ({
 describe('NonInteractiveController', () => {
   let controller: NonInteractiveController;
   let depositMappingService: DepositMappingService;
+  let withdrawalMappingService: WithdrawalMappingService;
   let stellarService: StellarService;
 
   beforeEach(async () => {
@@ -55,19 +67,21 @@ describe('NonInteractiveController', () => {
       providers: [
         { provide: ConfigService, useClass: ConfigServiceMock },
         { provide: DepositMappingService, useClass: mockService },
+        { provide: WithdrawalMappingService, useClass: withdrawalsServiceMock },
         { provide: StellarService, useClass: StellarServiceMock },
       ],
     }).compile();
 
     controller = app.get<NonInteractiveController>(NonInteractiveController);
     depositMappingService = app.get<DepositMappingService>(DepositMappingService);
+    withdrawalMappingService = app.get<WithdrawalMappingService>(WithdrawalMappingService);
     stellarService = app.get<StellarService>(StellarService);
   });
 
   describe('/transactions/deposit/non-interactive', () => {
     it('return valid response without extra if account exists and trusts', async () => {
       const spy = spyOn(depositMappingService, 'getDepositAddress').and.returnValue('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5');
-      const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({ trusts: true, exists: true });
+      const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({trusts: true, exists: true});
 
       expect(await controller.deposit({
         asset_code: 'TBTC',
@@ -84,7 +98,7 @@ describe('NonInteractiveController', () => {
 
     it('return valid response with extra if account doesnt trust', async () => {
       const spy = spyOn(depositMappingService, 'getDepositAddress').and.returnValue('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5');
-      const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({ trusts: false, exists: true });
+      const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({trusts: false, exists: true});
 
       expect(await controller.deposit({
         asset_code: 'TBTC',
@@ -104,7 +118,7 @@ describe('NonInteractiveController', () => {
 
     it('return valid response with increased fixed fee and extra if account doesnt exist', async () => {
       const spy = spyOn(depositMappingService, 'getDepositAddress').and.returnValue('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5');
-      const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({ trusts: false, exists: false });
+      const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({trusts: false, exists: false});
 
       expect(await controller.deposit({
         asset_code: 'TBTC',
@@ -119,6 +133,30 @@ describe('NonInteractiveController', () => {
         extra_info: {
           message: 'Account will be funded with 8 XLM. You need to establish a trustline for asset TBTC to account GAIJQAYGJ2TMP7OC5NFBJTPELBHZZJ4LDLTS4JZBV5SMVUKJGKTI4Q3O',
         },
+      });
+    });
+  });
+
+  describe('/transactions/withdrawal/non-interactive', () => {
+    it('return valid response', async () => {
+      const spy = spyOn(withdrawalMappingService, 'getWithdrawalMapping').and.returnValue(Promise.resolve({
+        addressIn: 'GAJ4SKSKRWFZVCB5OROZLSWOUC4OEI4QKHV46FDLR3D372KAU3TQEI2X',
+        id: 1,
+      }));
+
+      expect(await controller.withdraw({
+        asset_code: 'TBTC',
+        dest: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
+        type: 'crypto',
+      } as WithdrawDto)).toStrictEqual({
+        account_id: 'GAJ4SKSKRWFZVCB5OROZLSWOUC4OEI4QKHV46FDLR3D372KAU3TQEI2X',
+        memo_type: 'id',
+        memo: '1',
+        eta: 1200,
+        fee_fixed: 0.0001,
+        fee_percent: 0.001,
+        min_amount: 0.0002,
+        max_amount: undefined,
       });
     });
 
