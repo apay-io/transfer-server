@@ -21,7 +21,7 @@ export class AppController {
   @Header('Content-Type', 'text/plain')
   getStellarToml(@Req() req): string {
     let text = `TRANSFER_SERVER="${req.headers.host}"\n\n`;
-    this.config.get('assets').forEach((item: AssetInterface) => {
+    this.config.get('assets').raw.forEach((item: AssetInterface) => {
       text += `[[CURRENCIES]]\ncode="${item.code}"\n`;
       for (const [key, value] of Object.entries(item.stellar)) {
         text += `${key}=` + (typeof value === 'string' ? `"${value}"` : value) + `\n`;

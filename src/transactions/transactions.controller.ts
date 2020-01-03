@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Logger, Param, Post, Query, Res } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionsService } from './transactions.service';
@@ -7,14 +7,20 @@ import { Transaction } from './transaction.entity';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TxNotificationDto } from './dto/tx-notification.dto';
 import { TempTransactionsService } from './temp-transactions.service';
+import { InjectQueue } from 'nest-bull';
+import { Queue } from 'bull';
+import { TransactionChain } from './enums/transaction-chain.enum';
 
 @Controller()
 export class TransactionsController {
+  private readonly logger = new Logger(TransactionsController.name);
+
   constructor(
     @InjectConfig()
     private readonly config: ConfigService,
     private readonly tempTransactionsService: TempTransactionsService,
     private readonly transactionsService: TransactionsService,
+    @InjectQueue('temp-transactions') readonly queue: Queue,
   ) {
   }
 
@@ -75,16 +81,28 @@ export class TransactionsController {
    */
   @Post('notify/:chain/:secret')
   async notify(
-    @Param('chain') chain: string,
+    @Param('chain') chain: TransactionChain,
     @Param('secret') secret: string,
     @Body() txNotificationDto: TxNotificationDto,
   ) {
     if (this.config.get('app').notificationSecrets.indexOf(secret) === -1) {
       throw new ForbiddenException('Invalid secret');
     }
-    return this.tempTransactionsService.save(
-      chain,
-      txNotificationDto,
-    );
+    txNotificationDto.chain = chain;
+    try {
+      await this.tempTransactionsService.save(txNotificationDto);
+    } catch (err) {
+      if (err.message.includes('duplicate')) {
+        // all good
+      } else {
+        this.logger.error(err);
+      }
+    }
+    await this.queue.add(txNotificationDto, {
+      attempts: 5,
+      backoff: 10000, // 10 seconds
+      ...this.config.get('queue').defaultJobOptions,
+      timeout: 60000 * 5, // 5 min
+    });
   }
 }

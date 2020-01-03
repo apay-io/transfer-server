@@ -22,12 +22,12 @@ export class NonInteractiveController {
   ) {
   }
 
-  @Post('transactions/deposit/non-interactive')
+  @Post(['deposit', 'transactions/deposit/non-interactive'])
   @UseInterceptors(AnyFilesInterceptor())
   async deposit(
     @Body() depositDto: DepositDto,
   ): Promise<DepositResponseDto> {
-    const asset = this.getAssetConfig(depositDto.asset_code);
+    const asset = this.config.get('assets').getAssetConfig(depositDto.asset_code);
     const { exists, trusts } = await this.stellarService.checkAccount(
       depositDto.account,
       asset.code,
@@ -60,12 +60,12 @@ export class NonInteractiveController {
     };
   }
 
-  @Post('transactions/withdraw/non-interactive')
+  @Post(['withdraw', 'transactions/withdraw/non-interactive'])
   @UseInterceptors(AnyFilesInterceptor())
   async withdraw(
       @Body() withdrawDto: WithdrawDto,
   ): Promise<WithdrawalResponseDto> {
-    const asset = this.getAssetConfig(withdrawDto.asset_code);
+    const asset = this.config.get('asset').getAssetConfig(withdrawDto.asset_code);
     const withdrawalMapping = await this.withdrawalMappingService.getWithdrawalMapping(
         asset,
         withdrawDto.dest,
@@ -81,9 +81,5 @@ export class NonInteractiveController {
       fee_fixed: asset.withdrawal.fee_fixed,
       fee_percent: asset.withdrawal.fee_percent,
     } as WithdrawalResponseDto;
-  }
-
-  private getAssetConfig(assetCode: string): AssetInterface {
-    return this.config.get('assets').find((item) => item.code === assetCode);
   }
 }

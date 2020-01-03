@@ -13,7 +13,7 @@ export class WalletFactoryService {
   }
 
   get(assetCode: string) {
-    switch (assetCode) {
+    switch (assetCode.toUpperCase()) {
       case 'TBTC':
       case 'BTC':
         return this.bitgoDriver;

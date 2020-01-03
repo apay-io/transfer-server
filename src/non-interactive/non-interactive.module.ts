@@ -12,6 +12,10 @@ import { WithdrawalMappingService } from './withdrawal-mapping.service';
   controllers: [
     NonInteractiveController,
   ],
+  exports: [
+    DepositMappingService,
+    StellarService,
+  ],
   imports: [
     TypeOrmModule.forFeature([DepositMapping, WithdrawalMapping]),
     WalletsModule,

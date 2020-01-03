@@ -16,7 +16,14 @@ export enum AnchorAssetTypeEnum {
 }
 
 export interface AssetInterface {
-  code: string;
+  code: string; // asset code on Stellar
+  driver: {
+    code: string; // code of the asset in the wallet
+    env?: string; // bitgo environment
+    accessToken: string; // environment variable name for bitgo access token, don't store real secrets in this file
+    walletId: string; // environment variable name for bitgo wallet id, don't store real secrets in this file
+  };
+  // following settings for stellar.toml
   stellar: {
     code_template?: string
     issuer: string;
@@ -40,7 +47,11 @@ export interface AssetInterface {
     approval_server?: string;
     approval_criteria?: string;
   };
-  distributor: string;
+  horizonUrl: string; // settings that define stellar network (for supporting live + testnet assets at the same time)
+  networkPassphrase: string;
+  channels: string[]; // channel accounts for parallel processing, using just 1 atm, can be the same as distributor
+  distributor: string; // distributor account for the asset, can be the same as issuer
+  // following settings for sep6 deposit/withdrawals: limits and fees
   deposit: {
     min?: number;
     max?: number;
@@ -56,4 +67,6 @@ export interface AssetInterface {
     fee_percent?: number;
     eta?: number;
   };
+  totalSupply: string; // total asset supply on stellar (no easy way to calculate automatically)
+  excludedSupply?: string[]; // exclude some accounts from circulating supply calculation, leave empty if you don't know what it is
 }

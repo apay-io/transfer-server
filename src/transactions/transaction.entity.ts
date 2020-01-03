@@ -3,7 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Generated,
-  PrimaryGeneratedColumn,
+  PrimaryGeneratedColumn, Unique, ManyToOne, OneToMany,
 
 } from 'typeorm';
 import { BigNumber } from 'bignumber.js';
@@ -11,15 +11,45 @@ import { BigNumberToStringTransformer } from '../transformers/bignumber-to-strin
 import { TrimStringTransformer } from '../transformers/trim-string.transformer';
 import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionType } from './enums/transaction-type.enum';
+import { DepositMapping } from '../non-interactive/deposit-mapping.entity';
+import { TransactionLog } from './transaction-log.entity';
+
+// for best results add trigger to the database, which makes sure you can't override fields after setting initial value
+// for other fields privileges should allow only insert
+// only state can be modified, it shouldn't ruin much, but eventually we can check in trigger that it's modified only forward
+//
+// CREATE FUNCTION prevent_override() RETURNS trigger AS $prevent_override$
+// BEGIN
+// IF NEW.txOut IS NOT NULL AND OLD.txOut IS NOT NULL THEN
+// RAISE EXCEPTION 'cannot override txOut';
+// END IF;
+// IF NEW.channel IS NOT NULL AND OLD.channel IS NOT NULL THEN
+// RAISE EXCEPTION 'cannot override channel';
+// END IF;
+// IF NEW.sequence IS NOT NULL AND OLD.sequence IS NOT NULL THEN
+// RAISE EXCEPTION 'cannot override sequence';
+// END IF;
+// IF NEW.refunded IS NOT NULL AND OLD.refunded IS NOT NULL THEN
+// RAISE EXCEPTION 'cannot override refunded';
+// END IF;
+//
+// RETURN NEW;
+// END;
+// $prevent_override$ LANGUAGE plpgsql;
+//
+// CREATE TRIGGER prevent_override BEFORE UPDATE ON transaction
+// FOR EACH ROW EXECUTE PROCEDURE prevent_override();
 
 @Entity()
+@Unique(['txIn', 'txInIndex'])
+@Unique(['channel', 'sequence'])
 export class Transaction {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({type: 'uuid', nullable: false})
   @Generated('uuid')
-  uuid: string;
+  uuid?: string;
 
   @Column({
     type: 'enum',
@@ -49,7 +79,7 @@ export class Transaction {
     ],
     default: TransactionState.incomplete,
   })
-  state: string; // can be updated
+  state: TransactionState; // can be updated
 
   @Column({length: 255, nullable: false})
   txIn: string;
@@ -58,7 +88,7 @@ export class Transaction {
   txInIndex: number;
 
   @Column({length: 255, nullable: true})
-  txOut: string; // can be updated
+  txOut?: string; // can be updated once
 
   @Column({
     length: 255,
@@ -77,7 +107,7 @@ export class Transaction {
     nullable: true,
     transformer: new TrimStringTransformer(),
   })
-  addressInExtra: string;
+  addressInExtra?: string;
 
   @Column({
     length: 255,
@@ -132,14 +162,36 @@ export class Transaction {
   rateUsd: BigNumber;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @Column({
     length: 255,
     nullable: true,
   })
-  paging: string;
+  channel?: string; // can be updated once
 
-  @Column({ type: 'boolean' })
-  refunded: boolean;
+  @Column({
+    length: 255,
+    nullable: true,
+  })
+  sequence?: string; // can be updated once
+
+  @Column({
+    length: 255,
+    nullable: true,
+  })
+  paging?: string; // can be updated once
+
+  @Column({ type: 'boolean', default: false })
+  refunded: boolean; // can be updated once
+
+  @ManyToOne(type => DepositMapping, mapping => mapping.transactions, {
+    eager: true, persistence: true,
+  })
+  mapping: DepositMapping;
+
+  @OneToMany(type => TransactionLog, log => log.transaction, {
+    eager: true, persistence: true,
+  })
+  logs: TransactionLog[];
 }

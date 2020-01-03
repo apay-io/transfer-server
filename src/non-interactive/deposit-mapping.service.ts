@@ -35,6 +35,15 @@ export class DepositMappingService {
     return DepositMappingService.getDepositAddressString(asset, mapping.addressIn, mapping.id.toString());
   }
 
+  find(
+    asset: string,
+    addressIn: string,
+  ): Promise<DepositMapping> {
+    return this.repo.findOne({
+      asset, addressIn,
+    });
+  }
+
   private static getDepositAddressString(asset: string, addressIn: string, addressInExtra: string) {
     switch (asset) {
       case 'KIN':
