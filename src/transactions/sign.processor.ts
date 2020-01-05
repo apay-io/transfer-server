@@ -50,7 +50,7 @@ export class SignProcessor {
         throw new Error('balance mismatch, something\'s wrong');
       }
 
-      const signedXdr = this.stellarService.sign(job.data.xdr, assetConfig.stellar.networkPassphrase);
+      const signedXdr = this.stellarService.sign(job.data.xdr, assetConfig.networkPassphrase);
 
       await this.transactionLogsService.save(Object.assign(txLog, {
         processedAt: new Date(),

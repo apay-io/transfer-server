@@ -12,6 +12,10 @@ import { TransactionState } from '../src/transactions/enums/transaction-state.en
 import { TransactionType } from '../src/transactions/enums/transaction-type.enum';
 import { TempTransactionsService } from '../src/transactions/temp-transactions.service';
 import { TempTransaction } from '../src/transactions/temp-transaction.entity';
+import { TransactionLog } from '../src/transactions/transaction-log.entity';
+import { WithdrawalMappingService } from '../src/non-interactive/withdrawal-mapping.service';
+import { WithdrawalMapping } from '../src/non-interactive/withdrawal-mapping.entity';
+import { DepositMapping } from '../src/non-interactive/deposit-mapping.entity';
 
 describe('TransactionsController (e2e) /GET transactions', () => {
   let app: INestApplication;
@@ -21,6 +25,14 @@ describe('TransactionsController (e2e) /GET transactions', () => {
   };
   const tempTxsService = {
     save: () => {},
+  };
+  const withdrawalMappingService = {
+    getWithdrawalMapping: () => {
+      return {
+        id: 123,
+        addressIn: 'asd',
+      };
+    },
   };
 
   beforeAll(async () => {
@@ -35,12 +47,20 @@ describe('TransactionsController (e2e) /GET transactions', () => {
     })
       .overrideProvider(getRepositoryToken(Transaction))
       .useValue({})
+      .overrideProvider(getRepositoryToken(TransactionLog))
+      .useValue({})
       .overrideProvider(getRepositoryToken(TempTransaction))
+      .useValue({})
+      .overrideProvider(getRepositoryToken(DepositMapping))
+      .useValue({})
+      .overrideProvider(getRepositoryToken(WithdrawalMapping))
       .useValue({})
       .overrideProvider(TransactionsService)
       .useValue(txsService)
       .overrideProvider(TempTransactionsService)
       .useValue(tempTxsService)
+      .overrideProvider(WithdrawalMappingService)
+      .useValue(withdrawalMappingService)
       .compile();
 
     app = module.createNestApplication();
@@ -50,7 +70,7 @@ describe('TransactionsController (e2e) /GET transactions', () => {
 
   it(`GET /transactions empty`, () => {
     spyOn(txsService, 'find').and.returnValue([]);
-    const issuer = assets[0].stellar.issuer;
+    const issuer = assets.raw[0].stellar.issuer;
 
     return request(app.getHttpServer())
       .get('/transactions')
@@ -141,7 +161,7 @@ describe('TransactionsController (e2e) /GET transactions', () => {
 
   it(`GET /transactions known asset_issuer`, () => {
     spyOn(txsService, 'find').and.returnValue([]);
-    const issuer = assets[0].stellar.issuer;
+    const issuer = assets.raw[0].stellar.issuer;
 
     return request(app.getHttpServer())
       .get('/transactions')

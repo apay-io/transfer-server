@@ -65,7 +65,7 @@ export class NonInteractiveController {
   async withdraw(
       @Body() withdrawDto: WithdrawDto,
   ): Promise<WithdrawalResponseDto> {
-    const asset = this.config.get('asset').getAssetConfig(withdrawDto.asset_code);
+    const asset = this.config.get('assets').getAssetConfig(withdrawDto.asset_code);
     const withdrawalMapping = await this.withdrawalMappingService.getWithdrawalMapping(
         asset,
         withdrawDto.dest,
