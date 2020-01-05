@@ -14,7 +14,7 @@ import { TransactionType } from './enums/transaction-type.enum';
 import { DepositMapping } from '../non-interactive/deposit-mapping.entity';
 import { TransactionLog } from './transaction-log.entity';
 
-// for best results add trigger to the database, which makes sure you can't override fields after setting initial value
+// for the best results add this trigger to the database, which makes sure you can't override fields after setting initial value
 // for other fields privileges should allow only insert
 // only state can be modified, it shouldn't ruin much, but eventually we can check in trigger that it's modified only forward
 //

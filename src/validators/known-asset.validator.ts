@@ -10,7 +10,7 @@ import assets from '../config/assets';
 @ValidatorConstraint()
 export class IsKnownAssetConstraint implements ValidatorConstraintInterface {
   validate(asset: string, args: ValidationArguments) {
-    return assets.find((item) => item.code === asset);
+    return assets.raw.find((item) => item.code === asset);
   }
 
   defaultMessage(args: ValidationArguments) {
