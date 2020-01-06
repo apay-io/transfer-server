@@ -2,10 +2,11 @@ import {
   Entity,
   Column,
   CreateDateColumn,
-  PrimaryGeneratedColumn, Generated,
+  PrimaryGeneratedColumn, OneToMany,
 } from 'typeorm';
 import { TrimStringTransformer } from '../transformers/trim-string.transformer';
 import { MemoType, MemoReturn, MemoHash, MemoText, MemoID } from 'stellar-sdk';
+import { Transaction } from '../transactions/transaction.entity';
 
 @Entity()
 export class DepositMapping {
@@ -54,4 +55,9 @@ export class DepositMapping {
     nullable: true,
   })
   email: string;
+
+  @OneToMany(type => Transaction, tx => tx.mapping, {
+    lazy: true,
+  })
+  transactions: Transaction[];
 }

@@ -19,35 +19,37 @@ const StellarServiceMock = jest.fn(() => ({
 const ConfigServiceMock = jest.fn(() => ({
   get: (key) => {
     const config = {
-      assets: [
-        {
-          code: 'TBTC',
-          stellar: {
-            issuer: 'GAIJQAYGJ2TMP7OC5NFBJTPELBHZZJ4LDLTS4JZBV5SMVUKJGKTI4Q3O',
-            name: '',
-            desc: '',
-            image: '',
-            status: 'live',
-          },
-          distributor: 'GAJ4SKSKRWFZVCB5OROZLSWOUC4OEI4QKHV46FDLR3D372KAU3TQEI2X',
-          channels: [
-            'GAGQNTK7BR2UBP4Q6PER4ODTMFKO3IURMFRTSEKYEGNCA4QNGEUGKF3K',
-          ],
-          deposit: {
-            eta: 1200,
-            min: 0.0002,
-            fee_create: 0.0001,
-            fee_fixed: 0.0001,
-            fee_percent: 0.001,
-          },
-          withdrawal: {
-            eta: 1200,
-            min: 0.0002,
-            fee_fixed: 0.0001,
-            fee_percent: 0.001,
-          },
+      assets: {
+        getAssetConfig: () => {
+          return {
+            code: 'TBTC',
+            stellar: {
+              issuer: 'GAIJQAYGJ2TMP7OC5NFBJTPELBHZZJ4LDLTS4JZBV5SMVUKJGKTI4Q3O',
+              name: '',
+              desc: '',
+              image: '',
+              status: 'live',
+            },
+            distributor: 'GAJ4SKSKRWFZVCB5OROZLSWOUC4OEI4QKHV46FDLR3D372KAU3TQEI2X',
+            channels: [
+              'GAGQNTK7BR2UBP4Q6PER4ODTMFKO3IURMFRTSEKYEGNCA4QNGEUGKF3K',
+            ],
+            deposit: {
+              eta: 1200,
+              min: 0.0002,
+              fee_create: 0.0001,
+              fee_fixed: 0.0001,
+              fee_percent: 0.001,
+            },
+            withdrawal: {
+              eta: 1200,
+              min: 0.0002,
+              fee_fixed: 0.0001,
+              fee_percent: 0.001,
+            },
+          };
         },
-      ],
+      },
       stellar: {
         fundingAmount: 8,
       },

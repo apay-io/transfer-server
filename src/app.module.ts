@@ -7,6 +7,8 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { NonInteractiveModule } from './non-interactive/non-interactive.module';
 import { WalletsModule } from './wallets/wallets.module';
 import * as path from 'path';
+import { QueuesModule } from './queues/queues.module';
+import { UtilsModule } from './utils/utils.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import * as path from 'path';
     TransactionsModule,
     NonInteractiveModule,
     WalletsModule,
+    QueuesModule,
+    UtilsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

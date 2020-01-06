@@ -8,6 +8,7 @@ import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TempTransactionsService } from './temp-transactions.service';
+import { QueuesModule } from '../queues/queues.module';
 
 const mockService = jest.fn(() => ({
   find: () => [],
@@ -29,6 +30,7 @@ describe('TransacionsController', () => {
           path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
           {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
         ),
+        QueuesModule,
       ],
       providers: [
         { provide: TransactionsService, useClass: mockService },

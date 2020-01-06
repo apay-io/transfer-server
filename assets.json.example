@@ -1,33 +1,13 @@
 [
     {
-        "code": "TEST",
-        "stellar": {
-            "issuer": "GC3BW7GQB5ZN5DKEOKS74DVIDMUXMED5FWAFPS7KVOATUJPCH5JDPCM2",
-            "name": "",
-            "desc": "",
-            "image": "",
-            "status": "live"
-        },
-        "distributor": "GCQY4YRFDULPHU7PHCC7QBAD565FCZIG37JYOPZJYFZHMZEQUAXBQENT",
-        "channels": [
-            "GCLOJDVOWYXHFXXQB5TGQB2VCB2YVAF3KZMUDWADKIGIV7G5IRBG4S6L"
-        ],
-        "deposit": {
-            "eta": 5,
-            "min": 0.0001,
-            "fee_create": 0.0001,
-            "fee_fixed": 0.0001,
-            "fee_percent": 0.001
-        },
-        "withdrawal": {
-            "eta": 5,
-            "min": 0.0001,
-            "fee_fixed": 0.0001,
-            "fee_percent": 0.001
-        }
-    },
-    {
         "code": "TBTC",
+        "driver": {
+            "code": "tbtc",
+            "env": "test",
+            "accessToken": "BITGO_ACCESS_TOKEN",
+            "walletId": "BITGO_TBTC_WALLET_ID"
+        },
+        "totalSupply": "1000",
         "stellar": {
             "issuer": "GAIJQAYGJ2TMP7OC5NFBJTPELBHZZJ4LDLTS4JZBV5SMVUKJGKTI4Q3O",
             "name": "",
@@ -46,6 +26,8 @@
             "fee_fixed": 0.0,
             "fee_percent": 0.0
         },
+        "horizonUrl": "https://horizon-testnet.stellar.org",
+        "networkPassphrase": "Test SDF Network ; September 2015",
         "withdrawal": {
             "eta": 1200,
             "min": 0.0001,

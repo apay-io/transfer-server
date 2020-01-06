@@ -1,10 +1,11 @@
 import { Transaction } from './transaction.entity';
-import { Repository } from 'typeorm';
+import { In, IsNull, Repository, Not } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
+import { TransactionState } from './enums/transaction-state.enum';
 
 @Injectable()
 export class TransactionsService {
@@ -64,5 +65,34 @@ export class TransactionsService {
     builder.limit(1);
 
     return builder.getOne();
+  }
+
+  async save(entity: Transaction) {
+    try {
+      return await this.repo.save(entity);
+    } catch (err) {
+      if (err.message.includes('duplicate')) {
+        // if already exists - just update the state
+        return this.repo.update({
+          txIn: entity.txIn,
+          txInIndex: entity.txInIndex,
+          state: In([TransactionState.pending_external, TransactionState.pending_trust]),
+        }, {
+          state: entity.state,
+        });
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  updateState(entity: { txIn: string, txInIndex: number }, fromState: TransactionState, toState: TransactionState) {
+    return this.repo.update({
+      txIn: entity.txIn,
+      txInIndex: entity.txInIndex,
+      state: fromState,
+    }, {
+      state: toState,
+    });
   }
 }

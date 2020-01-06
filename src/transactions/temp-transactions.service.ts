@@ -12,11 +12,8 @@ export class TempTransactionsService {
   ) {
   }
 
-  save(chain: string, dto: TxNotificationDto): Promise<TempTransaction> {
-    const tempTx = this.repo.create({
-      chain,
-      hash: dto.hash,
-    });
+  save(dto: TxNotificationDto): Promise<TempTransaction> {
+    const tempTx = this.repo.create(dto);
     return this.repo.save(tempTx);
   }
 }
