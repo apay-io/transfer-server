@@ -2,11 +2,11 @@ import { InjectQueue, Process, Processor } from 'nest-bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import { StellarService } from '../non-interactive/stellar.service';
 import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionsService } from './transactions.service';
 import { TransactionLogsService } from './transaction-logs.service';
 import { TransactionLog } from './transaction-log.entity';
+import { StellarService } from '../wallets/stellar.service';
 
 /**
  * Worker responsible for submitting signed transactions to the network

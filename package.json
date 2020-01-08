@@ -9,6 +9,7 @@
   },
   "scripts": {
     "prebuild": "rimraf dist",
+    "postinstall": "cp .circleci/algo.d.ts node_modules/bitgo/dist/types/src/v2/coins/algo.d.ts",
     "build": "nest build",
     "build:dev": "nest build --watch --webpack",
     "start": "node dist/main",

@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BaseCoin, BitGo, Wallet } from 'bitgo';
 import { BigNumber } from 'bignumber.js';
+import { Wallet as WalletInterface } from '../wallet.interface';
+import { TxOutput } from '../dto/tx-output.dto';
 
 @Injectable()
-export class BitgoDriver {
+export class BitgoDriver implements WalletInterface {
   private bitgo = {};
 
   constructor(
@@ -37,7 +39,7 @@ export class BitgoDriver {
   }
 
   isValidDestination(asset: string, addressOut: string, addressOutExtra: string) {
-    return this.getCoin(asset).isValidAddress(addressOut);
+    return Promise.resolve(this.getCoin(asset).isValidAddress(addressOut));
   }
 
 // Bitgo response looks like this
@@ -112,18 +114,18 @@ export class BitgoDriver {
 //     }
 //   ]
 // }
-  async checkTransaction(asset: string, txHash: string) {
+  async checkTransaction(asset: string, txHash: string): Promise<TxOutput[]> {
     const wallet = await this.getWallet(asset.toUpperCase());
     const tx = await wallet.getTransaction({ txHash });
     return tx.outputs.filter((item) => !!item.wallet).map((output) => {
       const [hash, index] = output.id.split(':');
       return {
         asset: asset.toUpperCase(),
-        hash,
-        index,
-        from: tx.inputs[0].address,
-        to: output.address,
-        value: output.valueString,
+        txIn: hash,
+        txInIndex: index,
+        addressFrom: tx.inputs[0].address,
+        addressIn: output.address,
+        value: new BigNumber(output.valueString).dividedBy(1e8),
         confirmations: tx.confirmations,
       };
     });
@@ -132,5 +134,19 @@ export class BitgoDriver {
   async getBalance(asset: string) {
     const wallet = await this.getWallet(asset);
     return new BigNumber(wallet.balanceString()).dividedBy(1e8);
+  }
+
+  /**
+   * Making decision whether we can accept transaction as final based on value and number of confirmations
+   * @param value
+   * @param confirmations
+   * @param rateUsd
+   */
+  isFinalYet(value: BigNumber, confirmations: number, rateUsd: BigNumber) {
+    if (rateUsd.greaterThan(0)) {
+      const usdAmount = value.div(rateUsd).toNumber();
+      return confirmations >= Math.max(Math.log10(usdAmount) - 1, 1);
+    }
+    return false;
   }
 }

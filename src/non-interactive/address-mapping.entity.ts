@@ -2,12 +2,14 @@ import {
   Entity,
   Column,
   CreateDateColumn,
-  PrimaryGeneratedColumn,
+  PrimaryGeneratedColumn, OneToMany, TableInheritance,
 } from 'typeorm';
 import { TrimStringTransformer } from '../transformers/trim-string.transformer';
+import { Transaction } from '../transactions/transaction.entity';
 
 @Entity()
-export class WithdrawalMapping {
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+export class AddressMapping {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -20,7 +22,6 @@ export class WithdrawalMapping {
   @Column({
     length: 255,
     nullable: false,
-    transformer: new TrimStringTransformer(),
   })
   addressOut: string;
 
@@ -36,4 +37,9 @@ export class WithdrawalMapping {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(type => Transaction, tx => tx.mapping, {
+    lazy: true,
+  })
+  transactions: Transaction[];
 }

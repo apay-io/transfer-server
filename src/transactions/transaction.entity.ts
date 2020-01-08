@@ -11,8 +11,8 @@ import { BigNumberToStringTransformer } from '../transformers/bignumber-to-strin
 import { TrimStringTransformer } from '../transformers/trim-string.transformer';
 import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionType } from './enums/transaction-type.enum';
-import { DepositMapping } from '../non-interactive/deposit-mapping.entity';
 import { TransactionLog } from './transaction-log.entity';
+import { AddressMapping } from '../non-interactive/address-mapping.entity';
 
 // for the best results add this trigger to the database, which makes sure you can't override fields after setting initial value
 // for other fields privileges should allow only insert
@@ -185,13 +185,13 @@ export class Transaction {
   @Column({ type: 'boolean', default: false })
   refunded: boolean; // can be updated once
 
-  @ManyToOne(type => DepositMapping, mapping => mapping.transactions, {
+  @ManyToOne(type => AddressMapping, mapping => mapping.transactions, {
     eager: true, persistence: true,
   })
-  mapping: DepositMapping;
+  mapping: AddressMapping;
 
   @OneToMany(type => TransactionLog, log => log.transaction, {
     eager: true, persistence: true,
   })
-  logs: TransactionLog[];
+  logs?: TransactionLog[];
 }

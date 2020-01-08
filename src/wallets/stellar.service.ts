@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Server, TransactionBuilder, Operation, Asset, Memo, MemoType, Account, Horizon, Transaction, Keypair } from 'stellar-sdk';
+import { Server, TransactionBuilder, Operation, Asset, Memo, MemoType, Account, Horizon, Transaction, Keypair, StrKey } from 'stellar-sdk';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
 import BalanceLineAsset = Horizon.BalanceLineAsset;
+import { Wallet } from './wallet.interface';
+import { TxOutput } from './dto/tx-output.dto';
 
 @Injectable()
-export class StellarService {
+export class StellarService implements Wallet {
   private servers = {};
 
   constructor(
@@ -108,7 +110,8 @@ export class StellarService {
       .then((account) => account.sequenceNumber());
   }
 
-  async getCirculatingSupply(asset: string) {
+  // actually finds circulating supply of the asset
+  async getBalance(asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
 
     const distributor = await this.getServer(asset).loadAccount(assetConfig.distributor);
@@ -134,5 +137,46 @@ export class StellarService {
     }
 
     return new BigNumber(assetConfig.totalSupply).minus(excludedBalance).minus(distributorBalance);
+  }
+
+  getNewAddress(asset): Promise<string> {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    return assetConfig.distributor;
+  }
+
+  isValidDestination(asset: string, addressOut: string, addressOutExtra: string): Promise<boolean> {
+    return Promise.resolve(StrKey.isValidEd25519PublicKey(addressOut));
+  };
+
+  async checkTransaction(asset: string, txHash: string): Promise<TxOutput[]> {
+    const payments = await this.getServer(asset)
+      .payments()
+      .forTransaction(txHash)
+      .join('transactions')
+      .call();
+    return payments
+      .records
+      .filter((payment) => {
+        console.log(payment);
+        const assetConfig = this.config.get('assets').getAssetConfig(payment.asset_code);
+        return assetConfig && payment.asset_issuer === assetConfig.stellar.issuer
+          && payment.to === assetConfig.distributor;
+      }).map(async (payment) => {
+        const tx = await payment.transaction();
+        return {
+          asset: payment.asset_code,
+          txIn: txHash,
+          txInIndex: new BigNumber(payment.paging_token).minus(tx.paging_token).toNumber(),
+          addressFrom: payment.source_account || tx.source_account,
+          addressIn: payment.to,
+          addressInExtra: tx.memo,
+          value: payment.amount,
+          confirmations: 1, // doesn't matter, it's final
+        } as TxOutput;
+      });
+  }
+
+  isFinalYet(value: BigNumber, confirmations: number, rateUsd: BigNumber) {
+    return true;
   }
 }

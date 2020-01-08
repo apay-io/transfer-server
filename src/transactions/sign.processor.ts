@@ -3,9 +3,9 @@ import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import { StellarService } from '../non-interactive/stellar.service';
 import { TransactionLog } from './transaction-log.entity';
 import { TransactionLogsService } from './transaction-logs.service';
+import { StellarService } from '../wallets/stellar.service';
 
 /**
  * Worker responsible for signing prepared stellar transactions
@@ -44,7 +44,7 @@ export class SignProcessor {
       // just once more making sure that real balance exceeds issued assets
       const wallet = this.walletFactoryService.get(job.data.asset);
       const balance = await wallet.getBalance(job.data.asset);
-      const circulatingSupply = await this.stellarService.getCirculatingSupply(job.data.asset);
+      const circulatingSupply = await this.stellarService.getBalance(job.data.asset);
       this.logger.log({ balance: balance.toString(10), supply: circulatingSupply.toString(10)});
       if (balance.lessThan(circulatingSupply)) {
         throw new Error('balance mismatch, something\'s wrong');

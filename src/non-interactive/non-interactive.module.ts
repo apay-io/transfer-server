@@ -1,29 +1,24 @@
 import { Module } from '@nestjs/common';
 import { NonInteractiveController } from './non-interactive.controller';
-import { StellarService } from './stellar.service';
 import { WalletsModule } from '../wallets/wallets.module';
-import { DepositMappingService } from './deposit-mapping.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DepositMapping } from './deposit-mapping.entity';
-import { WithdrawalMapping } from './withdrawal-mapping.entity';
-import { WithdrawalMappingService } from './withdrawal-mapping.service';
+import { AddressMappingService } from './address-mapping.service';
+import { AddressMapping } from './address-mapping.entity';
 
 @Module({
   controllers: [
     NonInteractiveController,
   ],
   exports: [
-    DepositMappingService,
-    StellarService,
+    AddressMappingService,
   ],
   imports: [
-    TypeOrmModule.forFeature([DepositMapping, WithdrawalMapping]),
+    TypeOrmModule.forFeature([AddressMapping, DepositMapping]),
     WalletsModule,
   ],
   providers: [
-    DepositMappingService,
-    StellarService,
-    WithdrawalMappingService,
+    AddressMappingService,
   ],
 })
 export class NonInteractiveModule {}
