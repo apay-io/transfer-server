@@ -1,36 +1,11 @@
 import {
-  Entity,
-  Column,
-  CreateDateColumn,
-  PrimaryGeneratedColumn, OneToMany,
+  Column, ChildEntity,
 } from 'typeorm';
-import { TrimStringTransformer } from '../transformers/trim-string.transformer';
 import { MemoType, MemoReturn, MemoHash, MemoText, MemoID } from 'stellar-sdk';
-import { Transaction } from '../transactions/transaction.entity';
+import { AddressMapping } from './address-mapping.entity';
 
-@Entity()
-export class DepositMapping {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({
-    length: 255,
-    nullable: false,
-  })
-  addressIn: string;
-
-  @Column({
-    length: 255,
-    nullable: false,
-  })
-  addressOut: string;
-
-  @Column({
-    length: 255,
-    nullable: true,
-    transformer: new TrimStringTransformer(),
-  })
-  addressOutExtra: string;
+@ChildEntity()
+export class DepositMapping extends AddressMapping {
 
   @Column({
     type: 'enum',
@@ -44,20 +19,9 @@ export class DepositMapping {
   })
   addressOutExtraType: MemoType;
 
-  @Column({length: 255, nullable: false})
-  asset: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
   @Column({
     length: 255,
     nullable: true,
   })
   email: string;
-
-  @OneToMany(type => Transaction, tx => tx.mapping, {
-    lazy: true,
-  })
-  transactions: Transaction[];
 }

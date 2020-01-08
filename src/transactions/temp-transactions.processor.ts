@@ -4,13 +4,12 @@ import { Logger } from '@nestjs/common';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
 import { TransactionsService } from './transactions.service';
 import { TransactionType } from './enums/transaction-type.enum';
-import { Transaction } from './transaction.entity';
 import { TransactionState } from './enums/transaction-state.enum';
-import { DepositMappingService } from '../non-interactive/deposit-mapping.service';
 import { BigNumber } from 'bignumber.js';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import { StellarService } from '../non-interactive/stellar.service';
 import { UtilsService } from '../utils/utils.service';
+import { StellarService } from '../wallets/stellar.service';
+import { AddressMappingService } from '../non-interactive/address-mapping.service';
 
 /**
  * Processing initiated by a new confirmation webhook or the trustline from the user
@@ -24,7 +23,7 @@ export class TempTransactionsProcessor {
     @InjectConfig()
     private readonly config: ConfigService,
     private readonly utilsService: UtilsService,
-    private readonly depositMappingService: DepositMappingService,
+    private readonly mappingService: AddressMappingService,
     private readonly walletFactoryService: WalletFactoryService,
     private readonly stellarService: StellarService,
     private readonly transactionsService: TransactionsService,
@@ -34,6 +33,7 @@ export class TempTransactionsProcessor {
   @Process()
   async process(job: Job<{ hash: string, chain: string }>, done: DoneCallback) {
     this.logger.log(job.data);
+    const type = ['xlm', 'txlm'].includes(job.data.chain) ? TransactionType.withdrawal : TransactionType.deposit;
     const wallet = this.walletFactoryService.get(job.data.chain);
     try {
       // go through outputs and check if any goes to our address
@@ -45,39 +45,43 @@ export class TempTransactionsProcessor {
 
       if (outputs.length) {
         for (const output of outputs) {
-          const depositMapping = await this.depositMappingService.find(output.asset, output.to);
-          // checking for account existence here to make amount_out/amount_fee immutable
+          const mapping = await this.mappingService.find(output.asset, output.addressIn, output.addressInExtra);
+          this.logger.log(mapping);
+
+          // checking for account existence here to make amount_out/amount_fee immutable, it only makes sense for deposits
           // if account deleted after this check - resolution manual through support for now
-          const { exists, trusts } = await this.checkAccount(depositMapping.addressOut, output.asset);
-          this.logger.log({ account: depositMapping.addressOut, exists, trusts });
-          const amount = (new BigNumber(output.value)).div(1e8);
-          const fee = this.calculateFee(amount, output.asset, !exists);
+          const { exists, trusts } = type === TransactionType.withdrawal
+            ? { exists: true, trusts: true }
+            : await this.checkAccount(mapping.addressOut, output.asset);
+          this.logger.log({ account: mapping.addressOut, exists, trusts });
+
+          const fee = this.calculateFee(type, output.value, output.asset, !exists);
           const rateUsd = new BigNumber(rates[output.asset] || 0);
-          const isFinal = this.isFinalYet(output, rateUsd);
+          const isFinal = wallet.isFinalYet(output.value, output.confirmations, rateUsd);
           allFinal = allFinal && isFinal;
 
           // todo: check existing incomplete transaction and update its state
 
           // deduplication by txIn & txInIndex, keep in mind tx malleability when listing coins
           const tx = {
-            type: TransactionType.deposit,
+            type,
             state: trusts
               ? (isFinal ? TransactionState.pending_anchor : TransactionState.pending_external)
               : TransactionState.pending_trust,
-            txIn: output.hash,
-            txInIndex: output.index,
-            addressFrom: output.from,
-            addressIn: output.to,
-            addressOut: depositMapping.addressOut,
-            addressOutExtra: depositMapping.addressOutExtra,
+            txIn: output.txIn,
+            txInIndex: output.txInIndex,
+            addressFrom: output.addressFrom,
+            addressIn: output.addressIn,
+            addressOut: mapping.addressOut,
+            addressOutExtra: mapping.addressOutExtra,
             asset: output.asset,
-            amountIn: amount,
+            amountIn: output.value,
             amountFee: fee,
-            amountOut: amount.minus(fee),
+            amountOut: output.value.minus(fee),
             rateUsd,
             refunded: false,
-            mapping: depositMapping,
-          } as Transaction;
+            mapping,
+          };
 
           await this.transactionsService.save(tx);
 
@@ -116,19 +120,17 @@ export class TempTransactionsProcessor {
     return this.stellarService.checkAccount(address, asset, assetConfig.stellar.issuer);
   }
 
-  private calculateFee(amount: BigNumber, asset: string, needsFunding: boolean) {
+  private calculateFee(type: TransactionType, amount: BigNumber, asset: string, needsFunding: boolean) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
-    return amount
-      .mul(assetConfig.deposit.fee_percent)
-      .add(assetConfig.deposit.fee_fixed)
-      .add(needsFunding ? assetConfig.deposit.fee_create : 0);
-  }
-
-  private isFinalYet(output, rateUsd: BigNumber) {
-    if (rateUsd.greaterThan(0)) {
-      const usdAmount = (new BigNumber(output.value)).div(1e8).div(rateUsd).toNumber();
-      return output.confirmations >= Math.max(Math.log10(usdAmount) - 1, 1);
+    if (type === TransactionType.deposit) {
+      return amount
+        .mul(assetConfig.deposit.fee_percent)
+        .add(assetConfig.deposit.fee_fixed)
+        .add(needsFunding ? assetConfig.deposit.fee_create : 0);
+    } else {
+      return amount
+        .mul(assetConfig.withdrawal.fee_percent)
+        .add(assetConfig.withdrawal.fee_fixed);
     }
-    return false;
   }
 }

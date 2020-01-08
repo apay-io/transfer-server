@@ -4,9 +4,10 @@ import { Logger } from '@nestjs/common';
 import { Transaction } from './transaction.entity';
 import { BigNumber } from 'bignumber.js';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import { StellarService } from '../non-interactive/stellar.service';
 import { TransactionLogsService } from './transaction-logs.service';
 import { TransactionLog } from './transaction-log.entity';
+import { StellarService } from '../wallets/stellar.service';
+import { DepositMapping } from '../non-interactive/deposit-mapping.entity';
 
 let sequence: BigNumber;
 
@@ -49,7 +50,7 @@ export class TransactionsProcessor {
       const result = await this.stellarService.buildPaymentTx({
         addressOut: job.data.addressOut,
         addressOutExtra: job.data.mapping.addressOutExtra,
-        addressOutExtraType: job.data.mapping.addressOutExtraType,
+        addressOutExtraType: (job.data.mapping as DepositMapping).addressOutExtraType,
         amount: job.data.amountOut,
         asset: job.data.asset,
         sequence,

@@ -1,20 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from 'nestjs-config';
 import { NonInteractiveController } from './non-interactive.controller';
-import { DepositMappingService } from './deposit-mapping.service';
-import { StellarService } from './stellar.service';
 import { DepositDto } from './dto/deposit.dto';
-import { WithdrawalMappingService } from './withdrawal-mapping.service';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { StellarService } from '../wallets/stellar.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { DepositMapping } from './deposit-mapping.entity';
+import { AddressMapping } from './address-mapping.entity';
+import { AddressMappingService } from './address-mapping.service';
+import { WalletFactoryService } from '../wallets/wallet-factory.service';
 
 const mockService = jest.fn(() => ({
-  getDepositAddress: () => '',
+  getAddressMapping: () => '',
 }));
-const withdrawalsServiceMock = jest.fn(() => ({
-  getWithdrawalMapping: () => {},
+const mockRepo = jest.fn(() => ({
 }));
 const StellarServiceMock = jest.fn(() => ({
   checkAccount: () => '',
+}));
+const mockFactory = jest.fn(() => ({
+  get: () => '',
 }));
 const ConfigServiceMock = jest.fn(() => ({
   get: (key) => {
@@ -59,8 +64,7 @@ const ConfigServiceMock = jest.fn(() => ({
 
 describe('NonInteractiveController', () => {
   let controller: NonInteractiveController;
-  let depositMappingService: DepositMappingService;
-  let withdrawalMappingService: WithdrawalMappingService;
+  let mappingService: AddressMappingService;
   let stellarService: StellarService;
 
   beforeEach(async () => {
@@ -68,21 +72,23 @@ describe('NonInteractiveController', () => {
       controllers: [NonInteractiveController],
       providers: [
         { provide: ConfigService, useClass: ConfigServiceMock },
-        { provide: DepositMappingService, useClass: mockService },
-        { provide: WithdrawalMappingService, useClass: withdrawalsServiceMock },
+        { provide: getRepositoryToken(DepositMapping), useClass: mockRepo },
+        { provide: getRepositoryToken(AddressMapping), useClass: mockRepo },
+        { provide: AddressMappingService, useClass: mockService },
+        { provide: WalletFactoryService, useClass: mockFactory },
         { provide: StellarService, useClass: StellarServiceMock },
       ],
     }).compile();
 
     controller = app.get<NonInteractiveController>(NonInteractiveController);
-    depositMappingService = app.get<DepositMappingService>(DepositMappingService);
-    withdrawalMappingService = app.get<WithdrawalMappingService>(WithdrawalMappingService);
+    mappingService = app.get<AddressMappingService>(AddressMappingService);
     stellarService = app.get<StellarService>(StellarService);
   });
 
   describe('/transactions/deposit/non-interactive', () => {
     it('return valid response without extra if account exists and trusts', async () => {
-      const spy = spyOn(depositMappingService, 'getDepositAddress').and.returnValue('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5');
+      const spy = spyOn(mappingService, 'getAddressMapping').and
+        .returnValue(Promise.resolve({ addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5', id: 1}));
       const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({trusts: true, exists: true});
 
       expect(await controller.deposit({
@@ -99,7 +105,8 @@ describe('NonInteractiveController', () => {
     });
 
     it('return valid response with extra if account doesnt trust', async () => {
-      const spy = spyOn(depositMappingService, 'getDepositAddress').and.returnValue('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5');
+      const spy = spyOn(mappingService, 'getAddressMapping').and
+        .returnValue(Promise.resolve({ addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5', id: 1}));
       const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({trusts: false, exists: true});
 
       expect(await controller.deposit({
@@ -119,7 +126,8 @@ describe('NonInteractiveController', () => {
     });
 
     it('return valid response with increased fixed fee and extra if account doesnt exist', async () => {
-      const spy = spyOn(depositMappingService, 'getDepositAddress').and.returnValue('tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5');
+      const spy = spyOn(mappingService, 'getAddressMapping').and
+        .returnValue(Promise.resolve({ addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5', id: 1}));
       const spy2 = spyOn(stellarService, 'checkAccount').and.returnValue({trusts: false, exists: false});
 
       expect(await controller.deposit({
@@ -141,7 +149,7 @@ describe('NonInteractiveController', () => {
 
   describe('/transactions/withdrawal/non-interactive', () => {
     it('return valid response', async () => {
-      const spy = spyOn(withdrawalMappingService, 'getWithdrawalMapping').and.returnValue(Promise.resolve({
+      const spy = spyOn(mappingService, 'getAddressMapping').and.returnValue(Promise.resolve({
         addressIn: 'GAJ4SKSKRWFZVCB5OROZLSWOUC4OEI4QKHV46FDLR3D372KAU3TQEI2X',
         id: 1,
       }));
