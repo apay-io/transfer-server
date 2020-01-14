@@ -1,10 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { Server, TransactionBuilder, Operation, Asset, Memo, MemoType, Account, Horizon, Transaction, Keypair, StrKey } from 'stellar-sdk';
+import {
+  Server,
+  TransactionBuilder,
+  Operation,
+  Asset,
+  Memo,
+  MemoType,
+  Account,
+  Horizon,
+  Transaction,
+  Keypair,
+  StrKey,
+  ServerApi
+} from 'stellar-sdk';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
 import BalanceLineAsset = Horizon.BalanceLineAsset;
 import { Wallet } from './wallet.interface';
 import { TxOutput } from './dto/tx-output.dto';
+import { AssetInterface } from '../interfaces/asset.interface';
+import { RedisService } from 'nestjs-redis';
+import PaymentOperationRecord = ServerApi.PaymentOperationRecord;
+import PathPaymentOperationRecord = ServerApi.PathPaymentOperationRecord;
 
 @Injectable()
 export class StellarService implements Wallet {
@@ -14,6 +31,7 @@ export class StellarService implements Wallet {
   constructor(
     @InjectConfig()
     readonly config: ConfigService,
+    private readonly redisService: RedisService,
   ) {
   }
 
@@ -198,4 +216,31 @@ export class StellarService implements Wallet {
       sequence: this.sequences[asset].toString(10),
     };
   }
+
+  async listenToPayments(assetConfig: AssetInterface, callback: (op) => Promise<any>) {
+    const builder = this.getServer(assetConfig.code)
+      .payments()
+      .forAccount(assetConfig.distributor);
+
+    const client = this.redisService.getClient();
+    const cursor = await client.get(`${process.env.NODE_ENV}:stellar-listener:${assetConfig.code}`);
+    if (cursor) {
+      builder.cursor(cursor);
+    }
+
+    builder.stream({
+      onmessage: async (op) => {
+        if (op.transaction_successful
+          && op.asset_type
+          && op.asset_type !== 'native'
+          && op.asset_issuer === assetConfig.stellar.issuer
+          && op.to === assetConfig.distributor
+        ) {
+          await callback(op);
+          await client.set(`${process.env.NODE_ENV}:stellar-listener:${assetConfig.code}`, op.paging_token);
+        }
+      },
+    });
+  }
+
 }

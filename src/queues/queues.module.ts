@@ -2,14 +2,6 @@ import { Module } from '@nestjs/common';
 import { BullModule, BullModuleOptions } from 'nest-bull';
 import { ConfigModule, ConfigService } from 'nestjs-config';
 
-function redisOptions(configService: ConfigService) {
-  return {
-    host: configService.get('REDIS_HOST') || 'localhost',
-    port: configService.get('REDIS_PORT') || 6379,
-    password: configService.get('REDIS_PASS'),
-  };
-}
-
 const BullQueueModule = BullModule.registerAsync([
   {
     name: 'temp-transactions',
@@ -18,7 +10,7 @@ const BullQueueModule = BullModule.registerAsync([
       return {
         name: 'temp-transactions',
         options: {
-          redis: redisOptions(configService),
+          redis: configService.get('redis'),
         },
       };
     },
@@ -31,7 +23,7 @@ const BullQueueModule = BullModule.registerAsync([
       return {
         name: 'transactions',
         options: {
-          redis: redisOptions(configService),
+          redis: configService.get('redis'),
         },
       };
     },
@@ -44,7 +36,7 @@ const BullQueueModule = BullModule.registerAsync([
       return {
         name: 'sign',
         options: {
-          redis: redisOptions(configService),
+          redis: configService.get('redis'),
         },
       };
     },
@@ -57,7 +49,7 @@ const BullQueueModule = BullModule.registerAsync([
       return {
         name: 'submit',
         options: {
-          redis: redisOptions(configService),
+          redis: configService.get('redis'),
         },
       };
     },
