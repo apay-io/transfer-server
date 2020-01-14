@@ -19,6 +19,7 @@ async function bootstrap() {
 
   for (const assetConfig of allAssets) {
     await stellarService.listenToPayments(assetConfig, async (op) => {
+      // calling it directly right now, can be http request
       await txController.notify('xlm', configService.get('app').notificationSecrets[0], {
         asset: op.asset_code,
         type: TransactionType.withdrawal,
