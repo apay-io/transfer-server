@@ -13,6 +13,7 @@ import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionLog } from './transaction-log.entity';
 import { AddressMapping } from '../non-interactive/address-mapping.entity';
+import { DepositMapping } from '../non-interactive/address-mapping.entity';
 
 // for the best results add this trigger to the database, which makes sure you can't override fields after setting initial value
 // for other fields privileges should allow only insert
@@ -168,13 +169,13 @@ export class Transaction {
     length: 255,
     nullable: true,
   })
-  channel?: string; // can be updated once
+  channel?: string;
 
   @Column({
     length: 255,
     nullable: true,
   })
-  sequence?: string; // can be updated once
+  sequence?: string;
 
   @Column({
     length: 255,
@@ -189,6 +190,11 @@ export class Transaction {
     eager: true, persistence: true,
   })
   mapping: AddressMapping;
+
+  @ManyToOne(type => DepositMapping, mapping => mapping.transactions, {
+    eager: true, persistence: true,
+  })
+  depositMapping: DepositMapping;
 
   @OneToMany(type => TransactionLog, log => log.transaction, {
     eager: true, persistence: true,

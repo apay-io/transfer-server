@@ -1,17 +1,26 @@
 import { Transaction } from './transaction.entity';
-import { In, IsNull, Repository, Not } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TransactionState } from './enums/transaction-state.enum';
+import { ConfigService, InjectConfig } from 'nestjs-config';
+import { BigNumber } from 'bignumber.js';
+import { InjectQueue } from 'nest-bull';
+import { Queue } from 'bull';
+import * as groupBy from 'lodash.groupby';
 
 @Injectable()
 export class TransactionsService {
   constructor(
+    @InjectConfig()
+    private readonly config: ConfigService,
     @InjectRepository(Transaction)
     protected readonly repo: Repository<Transaction>,
+    @InjectQueue('transactions')
+    protected readonly txQueue: Queue,
   ) {
   }
 
@@ -86,13 +95,40 @@ export class TransactionsService {
     }
   }
 
-  updateState(entity: { txIn: string, txInIndex: number }, fromState: TransactionState, toState: TransactionState) {
+  updateState(entity: { channel: string, sequence: string }, fromState: TransactionState, toState: TransactionState) {
     return this.repo.update({
-      txIn: entity.txIn,
-      txInIndex: entity.txInIndex,
+      channel: entity.channel,
+      sequence: entity.sequence,
       state: fromState,
     }, {
       state: toState,
     });
+  }
+
+  async enqueuePendingWithdrawals(asset: string) {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    if (!assetConfig.withdrawalBatching) {
+      return [];
+    }
+    const sequence = new BigNumber(new Date().getTime() - 5000).dividedToIntegerBy(assetConfig.withdrawalBatching);
+
+    const pendingWithdrawals = await this.repo.find({
+      type: TransactionType.withdrawal,
+      asset,
+      state: In([TransactionState.pending_anchor, TransactionState.error]),
+      sequence: LessThan(sequence.toString(10)),
+    });
+    if (pendingWithdrawals.length) {
+      const groups = groupBy(pendingWithdrawals, 'sequence');
+      for (const group of Object.values(groups)) {
+        await this.txQueue.add({ txs: group }, {
+          attempts: 10,
+          backoff: {
+            type: 'exponential',
+          },
+          ...this.config.get('queue').defaultJobOptions,
+        });
+      }
+    }
   }
 }

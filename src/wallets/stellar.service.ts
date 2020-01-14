@@ -9,6 +9,7 @@ import { TxOutput } from './dto/tx-output.dto';
 @Injectable()
 export class StellarService implements Wallet {
   private servers = {};
+  private sequences = {};
 
   constructor(
     @InjectConfig()
@@ -45,47 +46,51 @@ export class StellarService implements Wallet {
     };
   }
 
+  // not batching stellar txs, assuming there is only 1 element in recipients array
   async buildPaymentTx(params: {
-    addressOut: string,
-    addressOutExtra: string,
-    addressOutExtraType: MemoType,
-    amount: BigNumber,
-    asset: string,
+    recipients: Array<{
+      addressOut: string,
+      addressOutExtra: string,
+      addressOutExtraType: MemoType,
+      amount: BigNumber,
+      asset: string,
+    }>,
+    channel: string,
     sequence: BigNumber,
   }) {
-    const assetConfig = this.config.get('assets').getAssetConfig(params.asset);
+    const asset = params.recipients[0].asset;
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
 
-    const feeStats = await this.getServer(params.asset).feeStats();
+    const feeStats = await this.getServer(asset).feeStats();
     const builder = new TransactionBuilder(
-      new Account(assetConfig.channels[0], params.sequence.toString()),
+      new Account(params.channel, params.sequence.toString()),
       {
         fee: Math.min(parseInt(feeStats.mode_accepted_fee, 10), 10000), // moderate fee, 10000 max
         networkPassphrase: assetConfig.networkPassphrase,
       })
       .setTimeout(1200) // 20 min, enough for 10 attempts to submit
       .addOperation(Operation.payment({
-        amount: params.amount.toString(10),
+        amount: params.recipients[0].amount.toString(10),
         asset: new Asset(assetConfig.code, assetConfig.stellar.issuer),
-        destination: params.addressOut,
+        destination: params.recipients[0].addressOut,
         source: assetConfig.distributor,
       }));
 
-    if (params.addressOutExtra) {
-      builder.addMemo(new Memo(params.addressOutExtraType, params.addressOutExtra));
+    if (params.recipients[0].addressOutExtra) {
+      builder.addMemo(new Memo(params.recipients[0].addressOutExtraType, params.recipients[0].addressOutExtra));
     }
 
     const tx = builder.build();
 
     return {
       hash: tx.hash().toString('hex'),
-      channel: assetConfig.channels[0],
-      sequence: tx.sequence,
-      xdr: tx.toEnvelope().toXDR('base64'),
+      rawTx: tx.toEnvelope().toXDR('base64').toString(),
     };
   }
 
-  sign(xdr: string, networkPassphrase: string) {
-    const tx = new Transaction(xdr, networkPassphrase);
+  sign(rawTx: string, asset: string) {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    const tx = new Transaction(rawTx, assetConfig.networkPassphrase);
     const keypairs = [tx.source];
     tx.operations.forEach((op) => {
       if (op.source && !keypairs.includes(op.source)) {
@@ -95,13 +100,13 @@ export class StellarService implements Wallet {
     tx.sign(...keypairs.map((account: string) => {
       return Keypair.fromSecret(this.config.get('stellar').getSecretForAccount(account));
     }));
-    return tx.toEnvelope().toXDR('base64');
+    return Promise.resolve(tx.toEnvelope().toXDR('base64').toString());
   }
 
-  submit(xdr: string, asset: string) {
+  submit(rawTx: string, asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
 
-    const tx = new Transaction(xdr, assetConfig.networkPassphrase);
+    const tx = new Transaction(rawTx, assetConfig.networkPassphrase);
     return this.getServer(asset).submitTransaction(tx);
   }
 
@@ -146,7 +151,7 @@ export class StellarService implements Wallet {
 
   isValidDestination(asset: string, addressOut: string, addressOutExtra: string): Promise<boolean> {
     return Promise.resolve(StrKey.isValidEd25519PublicKey(addressOut));
-  };
+  }
 
   async checkTransaction(asset: string, txHash: string): Promise<TxOutput[]> {
     const payments = await this.getServer(asset)
@@ -154,29 +159,43 @@ export class StellarService implements Wallet {
       .forTransaction(txHash)
       .join('transactions')
       .call();
-    return payments
+    const filteredPayments = payments
       .records
       .filter((payment) => {
-        console.log(payment);
         const assetConfig = this.config.get('assets').getAssetConfig(payment.asset_code);
         return assetConfig && payment.asset_issuer === assetConfig.stellar.issuer
           && payment.to === assetConfig.distributor;
-      }).map(async (payment) => {
-        const tx = await payment.transaction();
-        return {
-          asset: payment.asset_code,
-          txIn: txHash,
-          txInIndex: new BigNumber(payment.paging_token).minus(tx.paging_token).toNumber(),
-          addressFrom: payment.source_account || tx.source_account,
-          addressIn: payment.to,
-          addressInExtra: tx.memo,
-          value: payment.amount,
-          confirmations: 1, // doesn't matter, it's final
-        } as TxOutput;
       });
+
+    const results = [];
+    for (const payment of filteredPayments) {
+      const tx = await payment.transaction();
+      results.push({
+        asset: payment.asset_code,
+        txIn: txHash,
+        txInIndex: new BigNumber(payment.paging_token).minus(tx.paging_token).toNumber(),
+        addressFrom: payment.source_account || tx.source_account,
+        addressIn: payment.to,
+        addressInExtra: tx.memo,
+        value: new BigNumber(payment.amount),
+        confirmations: 1, // doesn't matter, it's final
+      } as TxOutput);
+    }
+    return results;
   }
 
   isFinalYet(value: BigNumber, confirmations: number, rateUsd: BigNumber) {
     return true;
+  }
+
+  async getChannelAndSequence(asset: string, channelInput: string, sequenceInput: string) {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    this.sequences[asset] = this.sequences[asset]
+      ? this.sequences[asset].add(1)
+      : new BigNumber(await this.getSequence(asset, assetConfig.channels[0]));
+    return {
+      channel: assetConfig.channels[0],
+      sequence: this.sequences[asset].toString(10),
+    };
   }
 }

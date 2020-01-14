@@ -5,7 +5,7 @@ import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { StellarService } from '../wallets/stellar.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DepositMapping } from './deposit-mapping.entity';
+import { DepositMapping } from './address-mapping.entity';
 import { AddressMapping } from './address-mapping.entity';
 import { AddressMappingService } from './address-mapping.service';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';

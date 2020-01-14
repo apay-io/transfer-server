@@ -10,10 +10,11 @@ import { MemoID } from 'stellar-sdk';
 import { StellarService } from '../wallets/stellar.service';
 import { AddressMappingService } from './address-mapping.service';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
-import { DepositMapping } from './deposit-mapping.entity';
+import { DepositMapping } from './address-mapping.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressMapping } from './address-mapping.entity';
+import { TransactionType } from '../transactions/enums/transaction-type.enum';
 
 @Controller()
 export class NonInteractiveController {
@@ -41,9 +42,10 @@ export class NonInteractiveController {
       asset.code,
       asset.stellar.issuer,
     );
+    const { walletIn, walletOut } = this.walletFactoryService.get(TransactionType.deposit, asset.code);
     const mapping = await this.mappingService.getAddressMapping(
-      this.walletFactoryService.get(asset.code),
-      this.stellarService,
+      walletIn,
+      walletOut,
       {
         asset: asset.code,
         addressOut: depositDto.account,
@@ -90,9 +92,10 @@ export class NonInteractiveController {
       @Body() withdrawDto: WithdrawDto,
   ): Promise<WithdrawalResponseDto> {
     const asset = this.config.get('assets').getAssetConfig(withdrawDto.asset_code);
+    const { walletIn, walletOut } = this.walletFactoryService.get(TransactionType.withdrawal, withdrawDto.asset_code);
     const mapping = await this.mappingService.getAddressMapping(
-      this.stellarService,
-      this.walletFactoryService.get(withdrawDto.asset_code),
+      walletIn,
+      walletOut,
       {
         asset: withdrawDto.asset_code,
         addressOut: withdrawDto.dest,

@@ -3,9 +3,9 @@ import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { TransactionsService } from '../src/transactions/transactions.service';
 import { TransactionsModule } from '../src/transactions/transactions.module';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Transaction } from '../src/transactions/transaction.entity';
-import { ConfigModule } from 'nestjs-config';
+import { ConfigModule, ConfigService } from 'nestjs-config';
 import * as path from 'path';
 import assets from '../src/config/assets';
 import { TransactionState } from '../src/transactions/enums/transaction-state.enum';
@@ -13,8 +13,9 @@ import { TransactionType } from '../src/transactions/enums/transaction-type.enum
 import { TempTransactionsService } from '../src/transactions/temp-transactions.service';
 import { TempTransaction } from '../src/transactions/temp-transaction.entity';
 import { TransactionLog } from '../src/transactions/transaction-log.entity';
-import { DepositMapping } from '../src/non-interactive/deposit-mapping.entity';
+import { DepositMapping } from '../src/non-interactive/address-mapping.entity';
 import { AddressMapping } from '../src/non-interactive/address-mapping.entity';
+import { AppModule } from '../src/app.module';
 
 describe('TransactionsController (e2e) /GET transactions', () => {
   let app: INestApplication;
@@ -29,11 +30,7 @@ describe('TransactionsController (e2e) /GET transactions', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
-        TransactionsModule,
+        AppModule,
       ],
     })
       .overrideProvider(getRepositoryToken(Transaction))

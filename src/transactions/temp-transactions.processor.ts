@@ -10,6 +10,7 @@ import { ConfigService, InjectConfig } from 'nestjs-config';
 import { UtilsService } from '../utils/utils.service';
 import { StellarService } from '../wallets/stellar.service';
 import { AddressMappingService } from '../non-interactive/address-mapping.service';
+import { Transaction } from './transaction.entity';
 
 /**
  * Processing initiated by a new confirmation webhook or the trustline from the user
@@ -31,40 +32,47 @@ export class TempTransactionsProcessor {
   ) {}
 
   @Process()
-  async process(job: Job<{ hash: string, chain: string }>, done: DoneCallback) {
+  async process(job: Job<{ type: TransactionType, asset: string, hash: string }>, done: DoneCallback) {
     this.logger.log(job.data);
-    const type = ['xlm', 'txlm'].includes(job.data.chain) ? TransactionType.withdrawal : TransactionType.deposit;
-    const wallet = this.walletFactoryService.get(job.data.chain);
+    const { walletIn, walletOut } = this.walletFactoryService.get(job.data.type, job.data.asset);
     try {
       // go through outputs and check if any goes to our address
       // create permanent tx in db with amounts
-      const outputs = await wallet.checkTransaction(job.data.chain, job.data.hash);
-      this.logger.log(outputs);
+      const outputs = await walletIn.checkTransaction(job.data.asset, job.data.hash);
+      this.logger.debug(outputs);
       const rates = await this.utilsService.getRates();
       let allFinal = true;
 
       if (outputs.length) {
         for (const output of outputs) {
           const mapping = await this.mappingService.find(output.asset, output.addressIn, output.addressInExtra);
-          this.logger.log(mapping);
+          this.logger.debug(mapping);
 
           // checking for account existence here to make amount_out/amount_fee immutable, it only makes sense for deposits
           // if account deleted after this check - resolution manual through support for now
-          const { exists, trusts } = type === TransactionType.withdrawal
+          const { exists, trusts } = job.data.type === TransactionType.withdrawal
             ? { exists: true, trusts: true }
             : await this.checkAccount(mapping.addressOut, output.asset);
-          this.logger.log({ account: mapping.addressOut, exists, trusts });
+          this.logger.debug({ exists, trusts });
 
-          const fee = this.calculateFee(type, output.value, output.asset, !exists);
+          const fee = this.calculateFee(job.data.type, output.value, output.asset, !exists);
+          this.logger.debug(fee);
           const rateUsd = new BigNumber(rates[output.asset] || 0);
-          const isFinal = wallet.isFinalYet(output.value, output.confirmations, rateUsd);
+          this.logger.debug(rateUsd);
+          const isFinal = walletIn.isFinalYet(output.value, output.confirmations, rateUsd);
+          this.logger.debug(isFinal);
           allFinal = allFinal && isFinal;
+
+          const { channel, sequence } = await walletOut.getChannelAndSequence(
+            job.data.asset, `${output.txIn}:${output.txInIndex}`, (new Date()).getTime().toString(10),
+          );
+          this.logger.debug({ channel, sequence });
 
           // todo: check existing incomplete transaction and update its state
 
           // deduplication by txIn & txInIndex, keep in mind tx malleability when listing coins
           const tx = {
-            type,
+            type: job.data.type,
             state: trusts
               ? (isFinal ? TransactionState.pending_anchor : TransactionState.pending_external)
               : TransactionState.pending_trust,
@@ -72,6 +80,7 @@ export class TempTransactionsProcessor {
             txInIndex: output.txInIndex,
             addressFrom: output.addressFrom,
             addressIn: output.addressIn,
+            addressInExtra: (output.addressInExtra ? output.addressInExtra.toString(10) : null),
             addressOut: mapping.addressOut,
             addressOutExtra: mapping.addressOutExtra,
             asset: output.asset,
@@ -79,16 +88,19 @@ export class TempTransactionsProcessor {
             amountFee: fee,
             amountOut: output.value.minus(fee),
             rateUsd,
+            channel,
+            sequence,
             refunded: false,
             mapping,
-          };
+          } as Transaction;
+          this.logger.log(tx);
 
           await this.transactionsService.save(tx);
 
-          if (trusts && isFinal) {
+          if (trusts && isFinal && !this.batching(tx.type, tx.asset)) {
             // add to the processing signQueue
-            await this.queue.add(tx, {
-              attempts: 5,
+            await this.queue.add({ txs: [tx] }, {
+              attempts: 1,
               backoff: {
                 type: 'exponential',
               },
@@ -132,5 +144,10 @@ export class TempTransactionsProcessor {
         .mul(assetConfig.withdrawal.fee_percent)
         .add(assetConfig.withdrawal.fee_fixed);
     }
+  }
+
+  private batching(type: string, asset: string) {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    return type === TransactionType.withdrawal && assetConfig.withdrawalBatching;
   }
 }

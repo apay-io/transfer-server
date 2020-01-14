@@ -6,7 +6,8 @@ import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionsService } from './transactions.service';
 import { TransactionLogsService } from './transaction-logs.service';
 import { TransactionLog } from './transaction-log.entity';
-import { StellarService } from '../wallets/stellar.service';
+import { WalletFactoryService } from '../wallets/wallet-factory.service';
+import { TransactionType } from './enums/transaction-type.enum';
 
 /**
  * Worker responsible for submitting signed transactions to the network
@@ -20,28 +21,27 @@ export class SubmitProcessor {
   constructor(
     @InjectConfig()
     private readonly config: ConfigService,
-    private readonly stellarService: StellarService,
+    private readonly walletFactoryService: WalletFactoryService,
     private readonly transactionsService: TransactionsService,
     private readonly transactionLogsService: TransactionLogsService,
   ) {}
 
   @Process()
-  async process(job: Job<{ txIn: string, txInIndex: number, xdr: string, asset: string }>, done: DoneCallback) {
+  async process(job: Job<{ channel: string, sequence: string, rawTx: string, asset: string, type: TransactionType }>, done: DoneCallback) {
     this.logger.log(job.data);
+    const txLog = await this.transactionLogsService.save({
+      state: 'submitting',
+      channel: job.data.channel,
+      sequence: job.data.sequence,
+    } as TransactionLog);
     try {
-      const txLog = await this.transactionLogsService.save({
-        state: 'submitting',
-        txIn: job.data.txIn,
-        txInIndex: job.data.txInIndex,
-      } as TransactionLog);
-      // throws here if transaction log record already exists, processing won't continue
-      // todo: any unsuccessful submissions can't be retried right now
+      const { walletOut } = this.walletFactoryService.get(job.data.type, job.data.asset);
 
       await this.transactionsService.updateState(
         job.data, TransactionState.pending_anchor, TransactionState.pending_stellar,
       );
 
-      const result = await this.stellarService.submit(job.data.xdr, job.data.asset);
+      const result = await walletOut.submit(job.data.rawTx, job.data.asset);
       this.logger.log(result);
 
       await this.transactionLogsService.save(Object.assign(txLog, {
@@ -53,6 +53,11 @@ export class SubmitProcessor {
       );
       done(null, result);
     } catch (err) {
+      // todo: check what kind of error, if timeout - need to determine tx status, not just retry
+      await this.transactionLogsService.save(Object.assign(txLog, {
+        processedAt: new Date(),
+        output: { err },
+      }));
       await this.transactionsService.updateState(
         job.data, TransactionState.pending_stellar, TransactionState.error,
       );

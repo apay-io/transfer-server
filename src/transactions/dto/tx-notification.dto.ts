@@ -1,10 +1,12 @@
 import { IsAlphanumeric, IsEnum, IsOptional } from 'class-validator';
-import { TransactionChain } from '../enums/transaction-chain.enum';
+import { TransactionType } from '../enums/transaction-type.enum';
 
 export class TxNotificationDto {
-  @IsEnum(TransactionChain)
+  @IsEnum(TransactionType)
   @IsOptional()
-  chain?: TransactionChain;
+  type?: TransactionType;
+  @IsOptional()
+  asset?: string;
   @IsAlphanumeric() // can be a more strict check, but need to take into account all different hashes used on different networks
   hash: string;
 }

@@ -4,6 +4,7 @@ import { BaseCoin, BitGo, Wallet } from 'bitgo';
 import { BigNumber } from 'bignumber.js';
 import { Wallet as WalletInterface } from '../wallet.interface';
 import { TxOutput } from '../dto/tx-output.dto';
+import { MemoType } from 'stellar-sdk';
 
 @Injectable()
 export class BitgoDriver implements WalletInterface {
@@ -148,5 +149,63 @@ export class BitgoDriver implements WalletInterface {
       return confirmations >= Math.max(Math.log10(usdAmount) - 1, 1);
     }
     return false;
+  }
+
+  // Slightly cheating here for simplicity
+  // todo: properly prebuild tx, then sign and submit
+  async buildPaymentTx(params: {
+    recipients: Array<{
+      addressOut: string,
+      addressOutExtra: string,
+      addressOutExtraType: MemoType,
+      amount: BigNumber,
+      asset: string,
+    }>,
+    channel: string,
+    sequence: BigNumber,
+  }): Promise<{ hash: string, rawTx: string }> {
+    const bitgoParams = {
+      recipients: params.recipients.map((item) => {
+        return {
+          address: item.addressOut,
+          amount: new BigNumber(item.amount).mul(1e8).toString(10),
+        };
+      }),
+      minConfirms: 1,
+      maxFeeRate: 80000,
+      sequenceId: params.sequence.toString(),
+    };
+    const tx = JSON.stringify(bitgoParams);
+
+    // const tx = bitcoin.Transaction.fromHex(result.txHex, bitcoin.networks.btc);
+    return {
+      rawTx: tx,
+      hash: null,
+    };
+  }
+
+  sign(rawTx: string, asset: string): Promise<string> {
+    return Promise.resolve(rawTx);
+  }
+
+  async submit(rawTx: string, asset: string): Promise<any> {
+    const wallet = await this.getWallet(asset);
+    return wallet.sendMany(JSON.parse(rawTx));
+  }
+
+  /**
+   * There is no nonce/sequence number for BTC, but Bitgo provides ability to supply unique sequenceId
+   * Using timestamp divided by batching interval
+   * @param asset
+   * @param channelInput
+   * @param sequenceInput
+   */
+  getChannelAndSequence(asset: string, channelInput: string, sequenceInput: string) {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    const timestamp = new BigNumber(sequenceInput);
+    return Promise.resolve({
+      channel: channelInput,
+      sequence: timestamp.dividedToIntegerBy(assetConfig.withdrawalBatching).toString(10),
+    });
   }
 }

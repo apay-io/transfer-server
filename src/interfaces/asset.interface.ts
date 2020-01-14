@@ -67,6 +67,7 @@ export interface AssetInterface {
     fee_percent?: number;
     eta?: number;
   };
+  withdrawalBatching: number; // how many milliseconds group together for withdrawal, value 60000 is 1 min
   totalSupply: string; // total asset supply on stellar (no easy way to calculate automatically)
   excludedSupply?: string[]; // exclude some accounts from circulating supply calculation, leave empty if you don't know what it is
 }
