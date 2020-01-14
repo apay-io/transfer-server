@@ -46,7 +46,7 @@
     "rimraf": "3.0.0",
     "rxjs": "6.5.4",
     "stellar-sdk": "3.3.0",
-    "typeorm": "0.2.20"
+    "typeorm": "0.2.22"
   },
   "devDependencies": {
     "@nestjs/cli": "6.14.0",
