@@ -1,14 +1,8 @@
 import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { ConfigModule, ConfigService } from 'nestjs-config';
-import * as path from 'path';
-import { NonInteractiveModule } from '../src/non-interactive/non-interactive.module';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { BitgoDriver } from '../src/wallets/drivers/bitgo.driver';
 import { WalletFactoryService } from '../src/wallets/wallet-factory.service';
-import { TransactionLog } from '../src/transactions/transaction-log.entity';
-import { Transaction } from '../src/transactions/transaction.entity';
 import { AppModule } from '../src/app.module';
 import { TransactionType } from '../src/transactions/enums/transaction-type.enum';
 import { StellarService } from '../src/wallets/stellar.service';
