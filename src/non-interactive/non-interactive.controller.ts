@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseInterceptors } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { DepositDto } from './dto/deposit.dto';
 import { DepositResponseDto } from './dto/deposit-response.dto';
@@ -31,11 +31,18 @@ export class NonInteractiveController {
   ) {
   }
 
-  @Post(['deposit', 'transactions/deposit/non-interactive'])
+  @Get('deposit')
+  depositSep6(@Query() depositDto: DepositDto): Promise<DepositResponseDto> {
+    return this.depositInternal(depositDto);
+  }
+
+  @Post('transactions/deposit/non-interactive')
   @UseInterceptors(AnyFilesInterceptor())
-  async deposit(
-    @Body() depositDto: DepositDto,
-  ): Promise<DepositResponseDto> {
+  deposit(@Body() depositDto: DepositDto): Promise<DepositResponseDto> {
+    return this.depositInternal(depositDto);
+  }
+
+  async depositInternal(depositDto: DepositDto): Promise<DepositResponseDto> {
     const asset = this.config.get('assets').getAssetConfig(depositDto.asset_code);
     const { exists, trusts } = await this.stellarService.checkAccount(
       depositDto.account,
@@ -86,11 +93,18 @@ export class NonInteractiveController {
     };
   }
 
-  @Post(['withdraw', 'transactions/withdraw/non-interactive'])
+  @Get('withdraw')
+  withdrawSep6(@Query() withdrawDto: WithdrawDto): Promise<WithdrawalResponseDto> {
+    return this.withdrawInternal(withdrawDto);
+  }
+
+  @Post('transactions/withdraw/non-interactive')
   @UseInterceptors(AnyFilesInterceptor())
-  async withdraw(
-      @Body() withdrawDto: WithdrawDto,
-  ): Promise<WithdrawalResponseDto> {
+  withdraw(@Body() withdrawDto: WithdrawDto): Promise<WithdrawalResponseDto> {
+    return this.withdrawInternal(withdrawDto);
+  }
+
+  async withdrawInternal(withdrawDto: WithdrawDto): Promise<WithdrawalResponseDto> {
     const asset = this.config.get('assets').getAssetConfig(withdrawDto.asset_code);
     const { walletIn, walletOut } = this.walletFactoryService.get(TransactionType.withdrawal, withdrawDto.asset_code);
     const mapping = await this.mappingService.getAddressMapping(
