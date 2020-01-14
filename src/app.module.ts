@@ -9,6 +9,7 @@ import { WalletsModule } from './wallets/wallets.module';
 import * as path from 'path';
 import { QueuesModule } from './queues/queues.module';
 import { UtilsModule } from './utils/utils.module';
+import { RedisModule } from 'nestjs-redis';
 
 @Module({
   imports: [
@@ -18,6 +19,10 @@ import { UtilsModule } from './utils/utils.module';
     ),
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => config.get('database'),
+      inject: [ConfigService],
+    }),
+    RedisModule.forRootAsync({
+      useFactory: (configService: ConfigService) => configService.get('redis'),
       inject: [ConfigService],
     }),
     TransactionsModule,
