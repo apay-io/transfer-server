@@ -9,7 +9,7 @@ import { TxNotificationDto } from './dto/tx-notification.dto';
 import { TempTransactionsService } from './temp-transactions.service';
 import { InjectQueue } from 'nest-bull';
 import { Queue } from 'bull';
-import { TransactionChain } from './enums/transaction-chain.enum';
+import { TransactionType } from './enums/transaction-type.enum';
 
 @Controller()
 export class TransactionsController {
@@ -20,7 +20,7 @@ export class TransactionsController {
     private readonly config: ConfigService,
     private readonly tempTransactionsService: TempTransactionsService,
     private readonly transactionsService: TransactionsService,
-    @InjectQueue('temp-transactions') readonly queue: Queue,
+    @InjectQueue('temp-transactions') readonly tempQueue: Queue,
   ) {
   }
 
@@ -75,20 +75,23 @@ export class TransactionsController {
    * This endpoint is for internal use only.
    * It is not safe to have it exposed to the internet, that's why we require a secret
    * Notifies system about incoming tx. We're saving tx into temp pool until our node confirms it's valid
-   * @param chain - chain code, valid values are btc, xlm, eth and other
+   * @param asset - chain code, valid values are btc, xlm, eth and other
    * @param secret
    * @param txNotificationDto must contain tx hash
    */
-  @Post('notify/:chain/:secret')
+  @Post('notify/:asset/:secret')
   async notify(
-    @Param('chain') chain: TransactionChain,
+    @Param('asset') asset: string,
     @Param('secret') secret: string,
     @Body() txNotificationDto: TxNotificationDto,
   ) {
     if (this.config.get('app').notificationSecrets.indexOf(secret) === -1) {
       throw new ForbiddenException('Invalid secret');
     }
-    txNotificationDto.chain = chain;
+    if (asset !== 'xlm') {
+      txNotificationDto.type = TransactionType.deposit;
+      txNotificationDto.asset = asset.toUpperCase();
+    }
     try {
       await this.tempTransactionsService.save(txNotificationDto);
     } catch (err) {
@@ -98,7 +101,7 @@ export class TransactionsController {
         this.logger.error(err);
       }
     }
-    await this.queue.add(txNotificationDto, {
+    await this.tempQueue.add(txNotificationDto, {
       attempts: 5,
       backoff: 10000, // 10 seconds
       ...this.config.get('queue').defaultJobOptions,

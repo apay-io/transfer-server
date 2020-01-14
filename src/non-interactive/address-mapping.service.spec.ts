@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from 'nestjs-config';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DepositMapping } from './deposit-mapping.entity';
+import { DepositMapping } from './address-mapping.entity';
 import { Repository } from 'typeorm';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
 import { BitgoDriver } from '../wallets/drivers/bitgo.driver';

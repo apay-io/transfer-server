@@ -6,12 +6,13 @@ import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionLog } from './transaction-log.entity';
 import { TransactionLogsService } from './transaction-logs.service';
 import { StellarService } from '../wallets/stellar.service';
+import { TransactionType } from './enums/transaction-type.enum';
+import { BigNumber } from 'bignumber.js';
 
 /**
  * Worker responsible for signing prepared stellar transactions
  * Can be run in separate isolated environment for additional security, it's the only place in code, that requires access to secret keys
- * Uses `bull` queue manager + db table `transaction_log` with unique constraint to ensure single processing of tx
- * Processing of the same job multiple times shouldn't be a problem, since sequence number has already been set.
+ * Doesn't matter if executed multiple times, sequence has already been defined
  * Performs extra sanity checks/asserts before signing transactions
  *  - real asset balance should always be greater or equal to assets in circulation on stellar
  *  (it won't catch anything if few transactions going out at the same time)
@@ -30,45 +31,61 @@ export class SignProcessor {
   ) {}
 
   @Process()
-  async process(job: Job<{ txIn: string, txInIndex: number, xdr: string, asset: string }>, done: DoneCallback) {
+  async process(job: Job<{
+                  channel: string,
+                  sequence: string,
+                  xdr: string,
+                  asset: string,
+                  type: TransactionType,
+                  totalChange: string,
+                }>,
+                done: DoneCallback) {
     this.logger.log(job.data);
-    const assetConfig = this.config.get('assets').getAssetConfig(job.data.asset);
+    const txLog = await this.transactionLogsService.save({
+      state: 'signing',
+      channel: job.data.channel,
+      sequence: job.data.sequence,
+    } as TransactionLog);
     try {
-      const txLog = await this.transactionLogsService.save({
-        state: 'signing',
-        txIn: job.data.txIn,
-        txInIndex: job.data.txInIndex,
-      } as TransactionLog);
 
       // todo: more pre-signing checks
-      // just once more making sure that real balance exceeds issued assets
-      const wallet = this.walletFactoryService.get(job.data.asset);
-      const balance = await wallet.getBalance(job.data.asset);
-      const circulatingSupply = await this.stellarService.getBalance(job.data.asset);
-      this.logger.log({ balance: balance.toString(10), supply: circulatingSupply.toString(10)});
-      if (balance.lessThan(circulatingSupply)) {
+      // just one more sanity check: making sure that real balance exceeds issued assets
+      const totalChange = new BigNumber(job.data.totalChange);
+      const { walletIn, walletOut } = this.walletFactoryService.get(job.data.type, job.data.asset);
+      const balanceIn = await walletIn.getBalance(job.data.asset);
+      const balanceOut = await walletOut.getBalance(job.data.asset);
+      this.logger.log({ balanceIn: balanceIn.toString(10), balanceOut: balanceOut.toString(10), totalChange });
+      if (job.data.type === TransactionType.deposit && balanceIn.lessThan(balanceOut.add(totalChange))) {
+        throw new Error('balance mismatch, something\'s wrong');
+      }
+      if (job.data.type === TransactionType.withdrawal && balanceIn.greaterThan(balanceOut.minus(totalChange))) {
         throw new Error('balance mismatch, something\'s wrong');
       }
 
-      const signedXdr = this.stellarService.sign(job.data.xdr, assetConfig.networkPassphrase);
+      const signedTx = await walletOut.sign(job.data.xdr, job.data.asset);
 
       await this.transactionLogsService.save(Object.assign(txLog, {
         processedAt: new Date(),
-        output: { xdr: signedXdr },
+        output: { rawTx: signedTx },
       }));
       await this.submitQueue.add({
-        txIn: job.data.txIn,
-        txInIndex: job.data.txInIndex,
-        xdr: signedXdr,
+        channel: job.data.channel,
+        sequence: job.data.sequence,
+        rawTx: signedTx,
         asset: job.data.asset,
+        type: job.data.type,
       }, {
         attempts: 10,
         backoff: 120000,
         ...this.config.get('queue').defaultJobOptions(),
         timeout: 120000, // 2 min
       });
-      done(null, signedXdr);
+      done(null, signedTx);
     } catch (err) {
+      await this.transactionLogsService.save(Object.assign(txLog, {
+        processedAt: new Date(),
+        output: { err },
+      }));
       this.logger.error(err);
       done(err);
     }

@@ -7,6 +7,11 @@ import { NonInteractiveModule } from '../src/non-interactive/non-interactive.mod
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { BitgoDriver } from '../src/wallets/drivers/bitgo.driver';
 import { WalletFactoryService } from '../src/wallets/wallet-factory.service';
+import { TransactionLog } from '../src/transactions/transaction-log.entity';
+import { Transaction } from '../src/transactions/transaction.entity';
+import { AppModule } from '../src/app.module';
+import { TransactionType } from '../src/transactions/enums/transaction-type.enum';
+import { StellarService } from '../src/wallets/stellar.service';
 
 const BitgoDriverMock = jest.fn(() => ({
   getNewAddress: () => '',
@@ -17,22 +22,19 @@ const BitgoDriverMock = jest.fn(() => ({
 describe('NonInteractiveController (e2e)', () => {
   let app: INestApplication;
   let bitgoDriver;
+  let stellarService;
   const WalletFactoryServiceMock = jest.fn(() => ({
-    get: () => bitgoDriver,
+    get: (type) => {
+      return type === TransactionType.deposit
+        ? { walletIn: bitgoDriver, walletOut: stellarService }
+        : { walletIn: stellarService, walletOut: bitgoDriver };
+    },
   }));
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, '../src/config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
-        TypeOrmModule.forRootAsync({
-          useFactory: (config: ConfigService) => config.get('database'),
-          inject: [ConfigService],
-        }),
-        NonInteractiveModule,
+        AppModule,
       ],
     })
       .overrideProvider(BitgoDriver)
@@ -43,6 +45,7 @@ describe('NonInteractiveController (e2e)', () => {
 
     app = module.createNestApplication();
     bitgoDriver = app.get<BitgoDriver>(BitgoDriver);
+    stellarService = app.get<StellarService>(StellarService);
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
   });

@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { DepositMapping } from './deposit-mapping.entity';
+import { DepositMapping } from './address-mapping.entity';
 import { Wallet } from '../wallets/wallet.interface';
 import { AddressMapping } from './address-mapping.entity';
 import { MappingDto } from './dto/mapping.dto';

@@ -2,19 +2,16 @@ import { InjectQueue, Process, Processor } from 'nest-bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { Transaction } from './transaction.entity';
-import { BigNumber } from 'bignumber.js';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionLogsService } from './transaction-logs.service';
 import { TransactionLog } from './transaction-log.entity';
-import { StellarService } from '../wallets/stellar.service';
-import { DepositMapping } from '../non-interactive/deposit-mapping.entity';
-
-let sequence: BigNumber;
+import { BigNumber } from 'bignumber.js';
+import { WalletFactoryService } from '../wallets/wallet-factory.service';
+import { TransactionType } from './enums/transaction-type.enum';
 
 /**
  * Worker responsible for preparing transactions for signing
- * One job should not be executed multiple times as it might create multiple outgoing transactions from one incoming
- * To prevent that using redis queue which won't process job twice + db table `transaction_log` with unique constraint
+ * Doesn't matter if executed multiple times, sequence has already been defined
  */
 @Processor({ name: 'transactions' })
 export class TransactionsProcessor {
@@ -23,51 +20,63 @@ export class TransactionsProcessor {
   constructor(
     @InjectConfig()
     private readonly config: ConfigService,
-    private readonly stellarService: StellarService,
+    private readonly walletFactoryService: WalletFactoryService,
     private readonly transactionLogsService: TransactionLogsService,
     @InjectQueue('sign') readonly signQueue: Queue,
   ) {}
 
   @Process()
-  async process(job: Job<Transaction>, done: DoneCallback) {
+  async process(job: Job<{ txs: Transaction[] }>, done: DoneCallback) {
     this.logger.log(job.data);
 
-    const assetConfig = this.config.get('assets').getAssetConfig(job.data.asset);
     try {
-      sequence = sequence
-        ? sequence.add(1)
-        : new BigNumber(await this.stellarService.getSequence(job.data.asset, assetConfig.channels[0]));
+      // assuming channel and sequence should be the same for all txs
+      const type = job.data.txs[0].type;
+      const asset = job.data.txs[0].asset;
+      const channel = job.data.txs[0].channel;
+      const sequence = job.data.txs[0].sequence;
 
-      // enforcing single execution through db unique constraint
-      // no locking for now (simplicity)
       const txLog = await this.transactionLogsService.save({
         state: 'building',
-        txIn: job.data.txIn,
-        txInIndex: job.data.txInIndex,
+        channel,
+        sequence,
       } as TransactionLog);
       // it throws here if such record already exists
+      this.logger.log(txLog);
 
-      const result = await this.stellarService.buildPaymentTx({
-        addressOut: job.data.addressOut,
-        addressOutExtra: job.data.mapping.addressOutExtra,
-        addressOutExtraType: (job.data.mapping as DepositMapping).addressOutExtraType,
-        amount: job.data.amountOut,
-        asset: job.data.asset,
-        sequence,
+      const { walletOut } = this.walletFactoryService.get(type as TransactionType, asset);
+      let totalChange = new BigNumber(0);
+      job.data.txs.forEach((tx: Transaction) => {
+        totalChange = totalChange.add(tx.amountOut);
       });
+      const result = await walletOut.buildPaymentTx({
+        recipients: job.data.txs.map((item: Transaction) => {
+          return {
+            addressOut: item.addressOut,
+            addressOutExtra: item.mapping.addressOutExtra,
+            addressOutExtraType: item.depositMapping ? item.depositMapping.addressOutExtraType : null,
+            amount: item.amountOut,
+            asset: item.asset,
+          };
+        }),
+        channel,
+        sequence: new BigNumber(sequence),
+      });
+
       this.logger.log(result);
 
-      // todo: save txOut hash, channel and sequence here if empty
-      // that will make sure that fields can't be overriden
+      // todo: save txOut hash here if available
       await this.transactionLogsService.save(Object.assign(txLog, {
         processedAt: new Date(),
         output: result,
       }));
       await this.signQueue.add({
-        txIn: job.data.txIn,
-        txInIndex: job.data.txInIndex,
-        xdr: result.xdr,
-        asset: job.data.asset,
+        channel,
+        sequence,
+        xdr: result.rawTx,
+        asset,
+        type,
+        totalChange: totalChange.toString(10),
       }, {
         ...this.config.get('queue').defaultJobOptions(),
       });
