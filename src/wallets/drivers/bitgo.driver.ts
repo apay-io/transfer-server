@@ -171,8 +171,6 @@ export class BitgoDriver implements WalletInterface {
           amount: new BigNumber(item.amount).mul(1e8).toString(10),
         };
       }),
-      minConfirms: 1,
-      maxFeeRate: 80000,
       sequenceId: params.sequence.toString(),
     };
     const tx = JSON.stringify(bitgoParams);
@@ -190,7 +188,13 @@ export class BitgoDriver implements WalletInterface {
 
   async submit(rawTx: string, asset: string): Promise<any> {
     const wallet = await this.getWallet(asset);
-    return wallet.sendMany(JSON.parse(rawTx));
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    return wallet.sendMany({
+      ...JSON.parse(rawTx),
+      minConfirms: 1,
+      maxFeeRate: 80000,
+      walletPassphrase: process.env[assetConfig.driver.walletPassphrase],
+    });
   }
 
   /**
