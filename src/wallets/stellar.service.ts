@@ -1,5 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Server, TransactionBuilder, Operation, Asset, Memo, MemoType, Account, Horizon, Transaction, Keypair, StrKey } from 'stellar-sdk';
+import {
+  Server,
+  TransactionBuilder,
+  Operation,
+  Asset,
+  Memo,
+  MemoType,
+  Account,
+  Horizon,
+  Transaction,
+  Keypair,
+  StrKey,
+  MemoID,
+} from 'stellar-sdk';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
 import BalanceLineAsset = Horizon.BalanceLineAsset;
@@ -170,6 +183,10 @@ export class StellarService implements Wallet {
     const results = [];
     for (const payment of filteredPayments) {
       const tx = await payment.transaction();
+      if (tx.memo_type !== MemoID || !tx.memo) {
+        // todo: send tx without memo for refund
+        continue;
+      }
       results.push({
         asset: payment.asset_code,
         txIn: txHash,
