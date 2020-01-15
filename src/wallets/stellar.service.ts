@@ -11,7 +11,7 @@ import {
   Transaction,
   Keypair,
   StrKey,
-  ServerApi
+  MemoID
 } from 'stellar-sdk';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
@@ -186,6 +186,10 @@ export class StellarService implements Wallet {
     const results = [];
     for (const payment of filteredPayments) {
       const tx = await payment.transaction();
+      if (tx.memo_type !== MemoID || !tx.memo) {
+        // todo: send tx without memo for refund
+        continue;
+      }
       results.push({
         asset: payment.asset_code,
         txIn: txHash,

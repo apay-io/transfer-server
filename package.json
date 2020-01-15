@@ -13,7 +13,6 @@
     "build": "nest build",
     "build:dev": "nest build --watch --webpack",
     "start": "node dist/main",
-    "start:batched": "node dist/batched",
     "start:monitor": "node dist/stellar-monitor",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "nest start --watch",
