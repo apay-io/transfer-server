@@ -1,7 +1,7 @@
 import { Transaction } from './transaction.entity';
 import { In, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
@@ -11,9 +11,10 @@ import { BigNumber } from 'bignumber.js';
 import { InjectQueue } from 'nest-bull';
 import { Queue } from 'bull';
 import * as groupBy from 'lodash.groupby';
+import { AssetInterface } from '../interfaces/asset.interface';
 
 @Injectable()
-export class TransactionsService {
+export class TransactionsService implements OnApplicationBootstrap {
   constructor(
     @InjectConfig()
     private readonly config: ConfigService,
@@ -105,16 +106,25 @@ export class TransactionsService {
     });
   }
 
-  async enqueuePendingWithdrawals(asset: string) {
-    const assetConfig = this.config.get('assets').getAssetConfig(asset);
-    if (!assetConfig.withdrawalBatching) {
-      return [];
+  /**
+   * Creates intervals to pull all pending withdrawals from DB and put them into processing queue
+   */
+  onApplicationBootstrap() {
+    const batchingAssets = this.config.get('assets').raw.filter((item) => item.withdrawalBatching);
+
+    for (const assetConfig of batchingAssets) {
+      setInterval(async () => {
+        await this.enqueuePendingWithdrawals(assetConfig);
+      }, assetConfig.withdrawalBatching);
     }
+  }
+
+  async enqueuePendingWithdrawals(assetConfig: AssetInterface) {
     const sequence = new BigNumber(new Date().getTime() - 5000).dividedToIntegerBy(assetConfig.withdrawalBatching);
 
     const pendingWithdrawals = await this.repo.find({
       type: TransactionType.withdrawal,
-      asset,
+      asset: assetConfig.code,
       state: In([TransactionState.pending_anchor, TransactionState.error]),
       sequence: LessThan(sequence.toString(10)),
     });

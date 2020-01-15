@@ -20,8 +20,6 @@ import { Wallet } from './wallet.interface';
 import { TxOutput } from './dto/tx-output.dto';
 import { AssetInterface } from '../interfaces/asset.interface';
 import { RedisService } from 'nestjs-redis';
-import PaymentOperationRecord = ServerApi.PaymentOperationRecord;
-import PathPaymentOperationRecord = ServerApi.PathPaymentOperationRecord;
 
 @Injectable()
 export class StellarService implements Wallet {
