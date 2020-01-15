@@ -22,6 +22,7 @@ export interface AssetInterface {
     env?: string; // bitgo environment
     accessToken: string; // environment variable name for bitgo access token, don't store real secrets in this file
     walletId: string; // environment variable name for bitgo wallet id, don't store real secrets in this file
+    walletPassphrase: string; // environment variable name for bitgo wallet passphrase, don't store real secrets in this file
   };
   // following settings for stellar.toml
   stellar: {
