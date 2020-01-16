@@ -60,7 +60,7 @@ export class Transaction {
     ],
     default: TransactionType.deposit,
   })
-  type: string;
+  type: TransactionType;
 
   @Column({
     type: 'enum',

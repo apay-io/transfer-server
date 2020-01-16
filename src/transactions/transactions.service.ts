@@ -136,13 +136,18 @@ export class TransactionsService implements OnApplicationBootstrap {
       const groups = groupBy(pendingWithdrawals, 'sequence');
       for (const group of Object.values(groups)) {
         await this.txQueue.add({ txs: group }, {
-          attempts: 10,
-          backoff: {
-            type: 'exponential',
-          },
           ...this.config.get('queue').defaultJobOptions,
         });
       }
     }
   }
+
+  findPendingTrustline(asset: string, trustlines: string[]): Promise<Transaction[]> {
+    return this.repo.find({
+      asset,
+      addressOut: In(trustlines),
+      state: TransactionState.pending_trust,
+    });
+  }
+
 }

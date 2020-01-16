@@ -44,7 +44,7 @@ export class TransactionsProcessor {
       // it throws here if such record already exists
       this.logger.log(txLog);
 
-      const { walletOut } = this.walletFactoryService.get(type as TransactionType, asset);
+      const { walletOut } = this.walletFactoryService.get(type, asset);
       let totalChange = new BigNumber(0);
       job.data.txs.forEach((tx: Transaction) => {
         totalChange = totalChange.add(tx.amountOut);
