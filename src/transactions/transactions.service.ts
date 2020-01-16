@@ -25,6 +25,10 @@ export class TransactionsService implements OnApplicationBootstrap {
   ) {
   }
 
+  findOne(params): Promise<Transaction> {
+    return this.repo.findOne(params);
+  }
+
   find(dto: TransactionsFilterDto): Promise<Transaction[]> {
     const builder = this.repo.createQueryBuilder()
       .where({
@@ -57,7 +61,7 @@ export class TransactionsService implements OnApplicationBootstrap {
     return builder.getMany();
   }
 
-  findOne(dto: TransactionFilterDto): Promise<Transaction> {
+  getTxById(dto: TransactionFilterDto): Promise<Transaction> {
     const builder = this.repo.createQueryBuilder();
     if (dto.id) {
       builder.where('Transaction.uuid = :id', { id: dto.id });
@@ -125,7 +129,7 @@ export class TransactionsService implements OnApplicationBootstrap {
     const pendingWithdrawals = await this.repo.find({
       type: TransactionType.withdrawal,
       asset: assetConfig.code,
-      state: In([TransactionState.pending_anchor, TransactionState.error]),
+      state: In([TransactionState.pending_anchor]),
       sequence: LessThan(sequence.toString(10)),
     });
     if (pendingWithdrawals.length) {

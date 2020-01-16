@@ -74,7 +74,7 @@ describe('TransacionsController', () => {
 
   describe('/transaction', () => {
     it('should return 404 no matching tx', async () => {
-      const spy = spyOn(txsService, 'findOne').and.returnValue(null);
+      const spy = spyOn(txsService, 'getTxById').and.returnValue(null);
 
       const response = {
         status: () => null,
@@ -89,7 +89,7 @@ describe('TransacionsController', () => {
     });
 
     it('should map data correctly', async () => {
-      const spy = spyOn(txsService, 'findOne').and.returnValue({
+      const spy = spyOn(txsService, 'getTxById').and.returnValue({
         id: 1,
         uuid: '730fbf44-aa56-427b-97c1-12f05408225d',
         type: TransactionType.deposit,

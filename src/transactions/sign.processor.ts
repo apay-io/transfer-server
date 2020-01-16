@@ -75,8 +75,6 @@ export class SignProcessor {
         asset: job.data.asset,
         type: job.data.type,
       }, {
-        attempts: 10,
-        backoff: 120000,
         ...this.config.get('queue').defaultJobOptions(),
         timeout: 120000, // 2 min
       });

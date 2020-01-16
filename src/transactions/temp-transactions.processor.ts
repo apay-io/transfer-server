@@ -63,47 +63,49 @@ export class TempTransactionsProcessor {
           this.logger.debug(isFinal);
           allFinal = allFinal && isFinal;
 
-          const { channel, sequence } = await walletOut.getChannelAndSequence(
-            job.data.asset, `${output.txIn}:${output.txInIndex}`, (new Date()).getTime().toString(10),
-          );
-          this.logger.debug({ channel, sequence });
-
-          // todo: check existing incomplete transaction and update its state
-
-          // deduplication by txIn & txInIndex, keep in mind tx malleability when listing coins
-          const tx = {
-            type: job.data.type,
-            state: trusts
-              ? (isFinal ? TransactionState.pending_anchor : TransactionState.pending_external)
-              : TransactionState.pending_trust,
+          let tx;
+          const existingTx = this.transactionsService.findOne({
             txIn: output.txIn,
             txInIndex: output.txInIndex,
-            addressFrom: output.addressFrom,
-            addressIn: output.addressIn,
-            addressInExtra: (output.addressInExtra ? output.addressInExtra.toString(10) : null),
-            addressOut: mapping.addressOut,
-            addressOutExtra: mapping.addressOutExtra,
-            asset: output.asset,
-            amountIn: output.value,
-            amountFee: fee,
-            amountOut: output.value.minus(fee),
-            rateUsd,
-            channel,
-            sequence,
-            refunded: false,
-            mapping,
-          } as Transaction;
-          this.logger.log(tx);
+          });
+          if (!existingTx) {
+            const {channel, sequence} = await walletOut.getChannelAndSequence(
+              job.data.asset, `${output.txIn}:${output.txInIndex}`, (new Date()).getTime().toString(10),
+            );
+            this.logger.debug({channel, sequence});
 
+            // deduplication by txIn & txInIndex, keep in mind tx malleability when listing coins
+            tx = {
+              type: job.data.type,
+              txIn: output.txIn,
+              txInIndex: output.txInIndex,
+              addressFrom: output.addressFrom,
+              addressIn: output.addressIn,
+              addressInExtra: (output.addressInExtra ? output.addressInExtra.toString(10) : null),
+              addressOut: mapping.addressOut,
+              addressOutExtra: mapping.addressOutExtra,
+              asset: output.asset,
+              amountIn: output.value,
+              amountFee: fee,
+              amountOut: output.value.minus(fee),
+              rateUsd,
+              channel,
+              sequence,
+              refunded: false,
+              mapping,
+            } as Transaction;
+
+          } else {
+            tx = existingTx;
+          }
+          tx.state = trusts
+            ? (isFinal ? TransactionState.pending_anchor : TransactionState.pending_external)
+            : TransactionState.pending_trust;
+          this.logger.log(tx);
           await this.transactionsService.save(tx);
 
           if (trusts && isFinal && !this.batching(tx.type, tx.asset)) {
-            // add to the processing signQueue
             await this.queue.add({ txs: [tx] }, {
-              attempts: 1,
-              backoff: {
-                type: 'exponential',
-              },
               ...this.config.get('queue').defaultJobOptions(),
             });
             this.logger.log('tx enqueued');
