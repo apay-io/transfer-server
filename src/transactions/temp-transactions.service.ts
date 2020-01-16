@@ -16,4 +16,10 @@ export class TempTransactionsService {
     const tempTx = this.repo.create(dto);
     return this.repo.save(tempTx);
   }
+
+  delete(asset: string, hash: string) {
+    return this.repo.delete({
+      asset, hash,
+    });
+  }
 }

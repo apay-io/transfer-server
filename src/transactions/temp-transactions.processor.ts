@@ -11,6 +11,7 @@ import { UtilsService } from '../utils/utils.service';
 import { StellarService } from '../wallets/stellar.service';
 import { AddressMappingService } from '../non-interactive/address-mapping.service';
 import { Transaction } from './transaction.entity';
+import { TempTransactionsService } from './temp-transactions.service';
 
 /**
  * Processing initiated by a new confirmation webhook or the trustline from the user
@@ -27,6 +28,7 @@ export class TempTransactionsProcessor {
     private readonly mappingService: AddressMappingService,
     private readonly walletFactoryService: WalletFactoryService,
     private readonly stellarService: StellarService,
+    private readonly tempTransactionsService: TempTransactionsService,
     private readonly transactionsService: TransactionsService,
     @InjectQueue('transactions') readonly queue: Queue,
   ) {}
@@ -103,6 +105,7 @@ export class TempTransactionsProcessor {
             : TransactionState.pending_trust;
           this.logger.log(tx);
           await this.transactionsService.save(tx);
+          await this.tempTransactionsService.delete(job.data.asset, job.data.hash);
 
           if (trusts && isFinal && !this.batching(tx.type, tx.asset)) {
             await this.queue.add({ txs: [tx] }, {
