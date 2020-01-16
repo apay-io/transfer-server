@@ -56,7 +56,7 @@ export class TransactionsController {
         error: 'At least one filter must be specified id, stellar_transaction_id or external_transaction_id',
       });
     }
-    const tx = await this.transactionsService.findOne(transactionFilterDto);
+    const tx = await this.transactionsService.getTxById(transactionFilterDto);
     if (!tx) {
       return response.status(404);
     }
