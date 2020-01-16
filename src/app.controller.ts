@@ -29,4 +29,50 @@ export class AppController {
     });
     return text;
   }
+
+  @Get('/info')
+  info(@Req() req) {
+    const response = {
+      deposit: {},
+      withdraw: {},
+      fee: {
+        enabled: false,
+      },
+      transactions: {
+        enabled: true,
+        authentication_required: false,
+      },
+      transaction: {
+        enabled: true,
+        authentication_required: false,
+      },
+    };
+
+    const assets = this.config.get('assets').raw;
+    for (const asset of assets) {
+      response.deposit[asset.code] = {
+        enabled: asset.stellar.status === 'live',
+        ...(asset.deposit ? {
+          fee_fixed: asset.deposit.fee_fixed,
+          fee_percent: asset.deposit.fee_percent,
+          min_amount: asset.deposit.min,
+          max_amount: asset.deposit.max,
+        } : {}),
+      };
+      response.withdraw[asset.code] = {
+        enabled: asset.stellar.status === 'live',
+        ...(asset.withdrawal ? {
+          fee_fixed: asset.withdrawal.fee_fixed,
+          fee_percent: asset.withdrawal.fee_percent,
+          min_amount: asset.withdrawal.min,
+          max_amount: asset.withdrawal.max,
+          types: {
+            crypto: {},
+          },
+        } : {}),
+      };
+    }
+
+    return response;
+  }
 }
