@@ -64,7 +64,7 @@ export class TempTransactionsProcessor {
           allFinal = allFinal && isFinal;
 
           let tx;
-          const existingTx = this.transactionsService.findOne({
+          const existingTx = await this.transactionsService.findOne({
             txIn: output.txIn,
             txInIndex: output.txInIndex,
           });
