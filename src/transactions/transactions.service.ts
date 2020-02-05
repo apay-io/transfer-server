@@ -1,5 +1,5 @@
 import { Transaction } from './transaction.entity';
-import { In, LessThan, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
@@ -124,21 +124,16 @@ export class TransactionsService implements OnApplicationBootstrap {
   }
 
   async enqueuePendingWithdrawals(assetConfig: AssetInterface) {
-    const sequence = new BigNumber(new Date().getTime() - 5000).dividedToIntegerBy(assetConfig.withdrawalBatching);
-
     const pendingWithdrawals = await this.repo.find({
       type: TransactionType.withdrawal,
       asset: assetConfig.code,
       state: In([TransactionState.pending_anchor]),
-      sequence: LessThan(sequence.toString(10)),
+      sequence: IsNull(),
     });
     if (pendingWithdrawals.length) {
-      const groups = groupBy(pendingWithdrawals, 'sequence');
-      for (const group of Object.values(groups)) {
-        await this.txQueue.add({ txs: group }, {
-          ...this.config.get('queue').defaultJobOptions,
-        });
-      }
+      await this.txQueue.add({ txs: pendingWithdrawals }, {
+        ...this.config.get('queue').defaultJobOptions,
+      });
     }
   }
 
@@ -150,4 +145,12 @@ export class TransactionsService implements OnApplicationBootstrap {
     });
   }
 
+  async assignSequence(txs: Transaction[], channel: string, sequence: string) {
+    const ids = txs.map((tx) => tx.id);
+    return this.repo.update({
+      id: In(ids),
+    }, {
+      channel, sequence,
+    });
+  }
 }

@@ -55,54 +55,39 @@ export class TempTransactionsProcessor {
           const { exists, trusts } = job.data.type === TransactionType.withdrawal
             ? { exists: true, trusts: true }
             : await this.checkAccount(mapping.addressOut, output.asset);
-          this.logger.debug({ exists, trusts });
 
           const fee = this.calculateFee(job.data.type, output.value, output.asset, !exists);
-          this.logger.debug(fee);
           const rateUsd = new BigNumber(rates[output.asset] || 0);
-          this.logger.debug(rateUsd);
           const isFinal = walletIn.isFinalYet(output.value, output.confirmations, rateUsd);
-          this.logger.debug(isFinal);
           allFinal = allFinal && isFinal;
 
-          let tx;
           const existingTx = await this.transactionsService.findOne({
             txIn: output.txIn,
             txInIndex: output.txInIndex,
           });
-          if (!existingTx) {
-            const {channel, sequence} = await walletOut.getChannelAndSequence(
-              job.data.asset, `${output.txIn}:${output.txInIndex}`, (new Date()).getTime().toString(10),
-            );
-            this.logger.debug({channel, sequence});
 
-            // deduplication by txIn & txInIndex, keep in mind tx malleability when listing coins
-            tx = {
-              type: job.data.type,
-              txIn: output.txIn,
-              txInIndex: output.txInIndex,
-              addressFrom: output.addressFrom,
-              addressIn: output.addressIn,
-              addressInExtra: (output.addressInExtra ? output.addressInExtra.toString(10) : null),
-              addressOut: mapping.addressOut,
-              addressOutExtra: mapping.addressOutExtra,
-              asset: output.asset,
-              amountIn: output.value,
-              amountFee: fee,
-              amountOut: output.value.minus(fee),
-              rateUsd,
-              channel,
-              sequence,
-              refunded: false,
-              mapping,
-            } as Transaction;
+          // deduplication by txIn & txInIndex, keep in mind tx malleability when listing coins
+          const tx = existingTx || {
+            type: job.data.type,
+            txIn: output.txIn,
+            txInIndex: output.txInIndex,
+            addressFrom: output.addressFrom,
+            addressIn: output.addressIn,
+            addressInExtra: (output.addressInExtra ? output.addressInExtra.toString(10) : null),
+            addressOut: mapping.addressOut,
+            addressOutExtra: mapping.addressOutExtra,
+            asset: output.asset,
+            amountIn: output.value,
+            amountFee: fee,
+            amountOut: output.value.minus(fee),
+            rateUsd,
+            refunded: false,
+            mapping,
+          } as Transaction;
 
-          } else {
-            tx = existingTx;
-          }
-          tx.state = trusts
+          tx.state = this.checkLimits(job.data.type, output.asset, output.value) || (trusts
             ? (isFinal ? TransactionState.pending_anchor : TransactionState.pending_external)
-            : TransactionState.pending_trust;
+            : TransactionState.pending_trust);
           this.logger.log(tx);
           await this.transactionsService.save(tx);
           await this.tempTransactionsService.delete(job.data.asset, job.data.hash);
@@ -124,7 +109,7 @@ export class TempTransactionsProcessor {
       }
     } catch (err) {
       if (err.status !== 404) {
-        this.logger.error(err);
+        throw err;
       } else {
         this.logger.log('not found ' + job.id);
       }
@@ -151,8 +136,19 @@ export class TempTransactionsProcessor {
     }
   }
 
-  private batching(type: string, asset: string) {
+  private batching(type: TransactionType, asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
     return type === TransactionType.withdrawal && assetConfig.withdrawalBatching;
+  }
+
+  private checkLimits(type: TransactionType, asset: string, value: BigNumber) {
+    const assetConfig = this.config.get('assets').getAssetConfig(asset);
+    if (assetConfig[type].min && value.lt(assetConfig[type].min)) {
+      return TransactionState.too_small;
+    }
+    if (assetConfig[type].max && value.gt(assetConfig[type].max)) {
+      return TransactionState.too_large;
+    }
+    return null;
   }
 }
