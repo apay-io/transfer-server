@@ -8,6 +8,7 @@ import { TransactionLog } from './transaction-log.entity';
 import { BigNumber } from 'bignumber.js';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
 import { TransactionType } from './enums/transaction-type.enum';
+import { TransactionsService } from './transactions.service';
 
 /**
  * Worker responsible for preparing transactions for signing
@@ -21,6 +22,7 @@ export class TransactionsProcessor {
     @InjectConfig()
     private readonly config: ConfigService,
     private readonly walletFactoryService: WalletFactoryService,
+    private readonly transactionsService: TransactionsService,
     private readonly transactionLogsService: TransactionLogsService,
     @InjectQueue('sign') readonly signQueue: Queue,
   ) {}
@@ -33,8 +35,12 @@ export class TransactionsProcessor {
       // assuming channel and sequence should be the same for all txs
       const type = job.data.txs[0].type;
       const asset = job.data.txs[0].asset;
-      const channel = job.data.txs[0].channel;
-      const sequence = job.data.txs[0].sequence;
+      const { walletOut } = this.walletFactoryService.get(type, asset);
+      const {channel, sequence} = await walletOut.getChannelAndSequence(
+        asset, `${job.data.txs[0].txIn}:${job.data.txs[0].txInIndex}`, (new Date()).getTime().toString(10),
+      );
+      this.logger.debug({channel, sequence});
+      await this.transactionsService.assignSequence(job.data.txs, channel, sequence);
 
       const txLog = await this.transactionLogsService.save({
         state: 'building',
@@ -44,7 +50,6 @@ export class TransactionsProcessor {
       // it throws here if such record already exists
       this.logger.log(txLog);
 
-      const { walletOut } = this.walletFactoryService.get(type, asset);
       let totalChange = new BigNumber(0);
       job.data.txs.forEach((tx: Transaction) => {
         totalChange = totalChange.add(tx.amountOut);

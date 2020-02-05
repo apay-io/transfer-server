@@ -2,12 +2,12 @@ const axios = require('axios');
 const dotenv = require('dotenv').config();
 const fs = require('fs');
 const StellarSdk = require('stellar-sdk');
-const server = new StellarSdk.Server(process.env.STELLAR_HORIZON_URI);
 
 const bootstrap = async () => {
   const assets = JSON.parse(fs.readFileSync('./assets.json'));
   let issuerKeypair, distKeypair, channelKeypair;
   for (const asset of assets) {
+    const server = new StellarSdk.Server(asset.horizonUrl);
     if (!asset.stellar.issuer) {
       issuerKeypair = StellarSdk.Keypair.random();
       asset.stellar.issuer = issuerKeypair.publicKey();
@@ -43,7 +43,7 @@ const bootstrap = async () => {
     try {
       const distributor = await server.loadAccount(asset.distributor);
       const txBuilder = new StellarSdk.TransactionBuilder(distributor, {
-        networkPassphrase: process.env.STELLAR_NETWORK_PASSPHRASE,
+        networkPassphrase: asset.networkPassphrase,
         fee: 100,
       });
       txBuilder.setTimeout(180);
