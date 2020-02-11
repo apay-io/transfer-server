@@ -88,8 +88,8 @@ export class TransactionsProcessor {
 
       done(null, result);
     } catch (err) {
-      this.logger.error(err);
-      done(err);
+      throw err;
+      // done(err);
     }
   }
 }
