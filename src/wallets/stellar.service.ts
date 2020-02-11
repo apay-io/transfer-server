@@ -81,7 +81,7 @@ export class StellarService implements Wallet {
     const builder = new TransactionBuilder(
       new Account(params.channel, params.sequence.toString()),
       {
-        fee: Math.min(parseInt(feeStats.mode_accepted_fee, 10), 10000), // moderate fee, 10000 max
+        fee: Math.min(parseInt(feeStats.fee_charged.mode, 10), 10000), // moderate fee, 10000 max
         networkPassphrase: assetConfig.networkPassphrase,
       })
       .setTimeout(1200) // 20 min, enough for 10 attempts to submit
