@@ -36,11 +36,15 @@ export class TransactionsProcessor {
       const type = job.data.txs[0].type;
       const asset = job.data.txs[0].asset;
       const { walletOut } = this.walletFactoryService.get(type, asset);
-      const {channel, sequence} = await walletOut.getChannelAndSequence(
-        asset, `${job.data.txs[0].txIn}:${job.data.txs[0].txInIndex}`, (new Date()).getTime().toString(10),
-      );
-      this.logger.debug({channel, sequence});
-      await this.transactionsService.assignSequence(job.data.txs, channel, sequence);
+      const {channel, sequence} = job.data.txs[0].channel && job.data.txs[0].sequence
+        ? job.data.txs[0]
+        : await walletOut.getChannelAndSequence(
+          asset, `${job.data.txs[0].txIn}:${job.data.txs[0].txInIndex}`, (new Date()).getTime().toString(10),
+        );
+      if (!job.data.txs[0].channel || !job.data.txs[0].sequence) {
+        this.logger.debug({channel, sequence});
+        await this.transactionsService.assignSequence(job.data.txs, channel, sequence);
+      }
 
       const txLog = await this.transactionLogsService.save({
         state: 'building',
