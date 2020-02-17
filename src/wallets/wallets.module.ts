@@ -9,9 +9,6 @@ import { RedisService } from 'nestjs-redis';
     StellarService,
     WalletFactoryService,
   ],
-  imports: [
-    RedisService,
-  ],
   providers: [
     BitgoDriver,
     StellarService,
