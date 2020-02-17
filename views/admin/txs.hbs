@@ -1,0 +1,38 @@
+<div class="mui-panel">
+    <table class="mui-table mui-table--bordered">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th></th>
+        <th>State</th>
+        <th>Asset</th>
+        <th>Amount In</th>
+        <th>Amount Out</th>
+        <th>Amount Fee</th>
+        <th>Tx In</th>
+        <th>Tx Out</th>
+        <th>Address In</th>
+        <th>Address Out</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#each txs}}
+        <tr>
+            <td>{{id}}</td>
+            <td>{{{formatDate createdAt}}}</td>
+            <td><span title="{{type}}">{{#if (eq type 'deposit')}}D{{else}}W{{/if}}</span></td>
+            <td>{{state}}</td>
+            <td>{{asset}}</td>
+            <td>{{amountIn}}</td>
+            <td>{{amountOut}}</td>
+            <td>{{amountFee}}</td>
+            <td>{{{formatTx type asset 'in' txIn}}}</td>
+            <td>{{{formatTx type asset 'out' txOut}}}</td>
+            <td>{{{formatAddress type asset 'in' addressIn}}}</td>
+            <td>{{{formatAddress type asset 'out' addressOut}}}</td>
+        </tr>
+    {{/each}}
+    </tbody>
+    </table>
+</div>

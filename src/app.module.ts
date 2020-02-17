@@ -10,6 +10,7 @@ import * as path from 'path';
 import { QueuesModule } from './queues/queues.module';
 import { UtilsModule } from './utils/utils.module';
 import { RedisModule } from 'nestjs-redis';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RedisModule } from 'nestjs-redis';
     WalletsModule,
     QueuesModule,
     UtilsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
