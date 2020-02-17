@@ -24,7 +24,7 @@ export default {
         : links.TXLM) + `">${address.slice(0, 5)}...${address.slice(-5)}</a>`
       : null;
   },
-  formatDate: (dateTime) => {
+  formatDate: (dateTime: Date) => {
     const now = new Date();
     const secondsAgo = Math.round((now.getTime() - dateTime.getTime()) / 1000);
     const minutesAgo = secondsAgo > 60 ? Math.round(secondsAgo / 60) + ' minutes ago' : null;
