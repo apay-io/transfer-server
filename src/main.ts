@@ -5,7 +5,7 @@ import * as rateLimit from 'express-rate-limit';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as exphbs from 'express-handlebars';
-import * as helpers from './utils/helpers';
+import helpers from './utils/helpers';
 
 declare const module: any;
 
