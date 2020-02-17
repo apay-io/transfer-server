@@ -12,6 +12,7 @@ import { InjectQueue } from 'nest-bull';
 import { Queue } from 'bull';
 import * as groupBy from 'lodash.groupby';
 import { AssetInterface } from '../interfaces/asset.interface';
+import { TransactionsFilterInternalDto } from './dto/transactions-filter-internal.dto';
 
 @Injectable()
 export class TransactionsService implements OnApplicationBootstrap {
@@ -29,23 +30,28 @@ export class TransactionsService implements OnApplicationBootstrap {
     return this.repo.findOne(params);
   }
 
-  find(dto: TransactionsFilterDto): Promise<Transaction[]> {
-    const builder = this.repo.createQueryBuilder()
-      .where({
+  find(dto: TransactionsFilterInternalDto): Promise<Transaction[]> {
+    const builder = this.repo.createQueryBuilder().where('1 = 1');
+
+    if (dto.asset_code) {
+      builder.andWhere('Transaction.asset = :asset', {
         asset: dto.asset_code,
       });
+    }
 
-    if (dto.kind) {
-      if (dto.kind === TransactionType.deposit) {
-        builder.andWhere('Transaction.addressOut = :account', {account: dto.account});
+    if (dto.account) {
+      if (dto.kind) {
+        if (dto.kind === TransactionType.deposit) {
+          builder.andWhere('Transaction.addressOut = :account', {account: dto.account});
+        } else {
+          builder.andWhere('Transaction.addressIn = :account', {account: dto.account});
+        }
       } else {
-        builder.andWhere('Transaction.addressIn = :account', {account: dto.account});
+        builder.andWhere(
+          'Transaction.addressIn = :account OR Transaction.addressOut = :account',
+          {account: dto.account},
+        );
       }
-    } else {
-      builder.andWhere(
-        'Transaction.addressIn = :account OR Transaction.addressOut = :account',
-        {account: dto.account},
-      );
     }
     if (dto.paging_id) {
       builder.andWhere('Transaction.paging < :paging', {paging: dto.paging_id});

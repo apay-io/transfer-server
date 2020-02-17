@@ -20,6 +20,9 @@ import { TransactionLogsService } from './transaction-logs.service';
   controllers: [
     TransactionsController,
   ],
+  exports: [
+    TransactionsService,
+  ],
   imports: [
     NonInteractiveModule,
     TypeOrmModule.forFeature([TempTransaction, Transaction, TransactionLog]),
