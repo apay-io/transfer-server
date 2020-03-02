@@ -80,7 +80,7 @@ export class AppController {
   }
 
   @Post('/validateAddress')
-  validateDestination(@Body() dto: { asset_code: string, dest: string, dest_extra: string }) {
+  validateDestination(@Body() dto: { asset_code: string, dest: string, dest_extra?: string }) {
     const { walletOut } = this.walletFactory.get(TransactionType.withdrawal, dto.asset_code);
     return walletOut.isValidDestination(dto.asset_code, dto.dest, dto.dest_extra);
   }
