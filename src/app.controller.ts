@@ -1,7 +1,9 @@
-import { Controller, Get, Header, Req } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { AssetInterface } from './interfaces/asset.interface';
+import { WalletFactoryService } from './wallets/wallet-factory.service';
+import { TransactionType } from './transactions/enums/transaction-type.enum';
 
 @Controller()
 export class AppController {
@@ -9,6 +11,7 @@ export class AppController {
     @InjectConfig()
     private readonly config: ConfigService,
     private readonly appService: AppService,
+    private readonly walletFactory: WalletFactoryService,
   ) {
   }
 
@@ -74,5 +77,11 @@ export class AppController {
     }
 
     return response;
+  }
+
+  @Post('/validateAddress')
+  validateDestination(@Body() dto: { asset_code: string, dest: string, dest_extra: string }) {
+    const { walletOut } = this.walletFactory.get(TransactionType.withdrawal, dto.asset_code);
+    return walletOut.isValidDestination(dto.asset_code, dto.dest, dto.dest_extra);
   }
 }
