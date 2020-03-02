@@ -1,3 +1,5 @@
+import { BigNumber } from 'bignumber.js';
+
 export default {
   eq: (arg1, arg2) => arg1 === arg2,
   formatTx: (type, asset, direction, hash) => {
@@ -31,5 +33,8 @@ export default {
     const hoursAgo = secondsAgo > 3600 ? Math.round(secondsAgo / 3600) + ' hours ago' : null;
     const daysAgo = secondsAgo > 86400 ? Math.round(secondsAgo / 86400) + ' days ago' : null;
     return `${dateTime.toString().slice(4, 15)}<br>${dateTime.toString().slice(16, 24)}<br>${daysAgo || hoursAgo || minutesAgo || (secondsAgo + ' seconds ago')}`;
+  },
+  formatAmount: (amount: BigNumber) => {
+    return amount.toFixed(7).replace(/\.?0+$/, '');
   },
 };
