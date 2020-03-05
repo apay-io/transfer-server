@@ -26,9 +26,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@nestjs/common": "6.11.8",
-    "@nestjs/core": "6.11.8",
-    "@nestjs/platform-express": "6.11.8",
+    "@nestjs/common": "6.11.11",
+    "@nestjs/core": "6.11.11",
+    "@nestjs/platform-express": "6.11.11",
     "@nestjs/typeorm": "6.3.3",
     "@types/dotenv": "6.1.1",
     "bitgo": "9.5.1",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "@nestjs/cli": "6.14.2",
     "@nestjs/schematics": "6.9.4",
-    "@nestjs/testing": "6.11.8",
+    "@nestjs/testing": "6.11.11",
     "@types/bull": "3.12.1",
     "@types/express": "4.17.2",
     "@types/jest": "25.1.3",
