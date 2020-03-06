@@ -6,11 +6,13 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as exphbs from 'express-handlebars';
 import helpers from './utils/helpers';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useWebSocketAdapter(new WsAdapter(app));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.enableCors();
   app.use(

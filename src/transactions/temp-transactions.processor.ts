@@ -12,6 +12,7 @@ import { StellarService } from '../wallets/stellar.service';
 import { AddressMappingService } from '../non-interactive/address-mapping.service';
 import { Transaction } from './transaction.entity';
 import { TempTransactionsService } from './temp-transactions.service';
+import { EventsGateway } from './events.gateway';
 
 /**
  * Processing initiated by a new confirmation webhook or the trustline from the user
@@ -31,6 +32,7 @@ export class TempTransactionsProcessor {
     private readonly tempTransactionsService: TempTransactionsService,
     private readonly transactionsService: TransactionsService,
     @InjectQueue('transactions') readonly queue: Queue,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   @Process()
@@ -91,6 +93,7 @@ export class TempTransactionsProcessor {
           this.logger.log(tx);
           await this.transactionsService.save(tx);
           await this.tempTransactionsService.delete(job.data.asset, job.data.hash);
+          this.eventsGateway.send(tx);
 
           if (trusts && isFinal && !this.batching(tx.type, tx.asset)) {
             await this.queue.add({ txs: [tx] }, {

@@ -15,6 +15,7 @@ import { SignProcessor } from './sign.processor';
 import { SubmitProcessor } from './submit.processor';
 import { TransactionLog } from './transaction-log.entity';
 import { TransactionLogsService } from './transaction-logs.service';
+import { EventsGateway } from './events.gateway';
 
 @Module({
   controllers: [
@@ -38,6 +39,7 @@ import { TransactionLogsService } from './transaction-logs.service';
     SubmitProcessor,
     TransactionsService,
     TransactionLogsService,
+    EventsGateway,
   ],
 })
 export class TransactionsModule {
