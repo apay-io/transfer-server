@@ -29,7 +29,7 @@
     "@nestjs/common": "6.11.11",
     "@nestjs/core": "6.11.11",
     "@nestjs/platform-express": "6.11.11",
-    "@nestjs/typeorm": "6.3.3",
+    "@nestjs/typeorm": "7.0.0",
     "@types/dotenv": "6.1.1",
     "bitgo": "9.5.1",
     "bull": "3.13.0",
