@@ -41,7 +41,7 @@
     "lodash.groupby": "4.6.0",
     "nest-bull": "0.9.0",
     "nestjs-config": "1.4.5",
-    "nestjs-redis": "1.2.5",
+    "nestjs-redis": "1.2.7",
     "pg": "7.18.2",
     "reflect-metadata": "0.1.13",
     "rimraf": "3.0.2",
