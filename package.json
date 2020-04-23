@@ -34,7 +34,7 @@
     "bitgo": "9.5.1",
     "bull": "3.13.0",
     "class-transformer": "0.2.3",
-    "class-validator": "0.11.0",
+    "class-validator": "0.12.2",
     "express-handlebars": "3.1.0",
     "express-rate-limit": "5.1.1",
     "hbs": "4.1.0",
