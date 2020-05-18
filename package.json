@@ -26,6 +26,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/bull": "0.1.1",
     "@nestjs/common": "6.11.11",
     "@nestjs/core": "6.11.11",
     "@nestjs/platform-express": "6.11.11",
@@ -39,7 +40,6 @@
     "express-rate-limit": "5.1.1",
     "hbs": "4.1.0",
     "lodash.groupby": "4.6.0",
-    "nest-bull": "0.9.0",
     "nestjs-config": "1.4.5",
     "nestjs-redis": "1.2.5",
     "pg": "7.18.2",

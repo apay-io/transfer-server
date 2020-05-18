@@ -1,11 +1,18 @@
-import { Controller, Get, Render } from '@nestjs/common';
+import { Controller, Get, Param, Post, Render, Res } from '@nestjs/common';
 import { TransactionsService } from '../transactions/transactions.service';
+import { Response } from 'express';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { ConfigService, InjectConfig } from 'nestjs-config';
 
 @Controller('admin')
 export class AdminController {
 
   constructor(
+    @InjectConfig()
+    private readonly config: ConfigService,
     private readonly txsService: TransactionsService,
+    @InjectQueue('transactions') readonly txsQueue: Queue,
   ) {
   }
 
@@ -24,5 +31,14 @@ export class AdminController {
     return {
       txs,
     };
+  }
+
+  @Post('/txs/retry/:id')
+  async retry(@Param('id') id, @Res() res: Response) {
+    const tx = await this.txsService.findOne(id);
+    await this.txsQueue.add({ txs: [tx] }, {
+      ...this.config.get('queue').defaultJobOptions(),
+    });
+    return res.redirect(301, '/admin/txs');
   }
 }

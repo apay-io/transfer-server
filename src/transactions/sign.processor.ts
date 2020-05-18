@@ -1,4 +1,4 @@
-import { InjectQueue, Process, Processor } from 'nest-bull';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
@@ -17,7 +17,7 @@ import { BigNumber } from 'bignumber.js';
  *  - real asset balance should always be greater or equal to assets in circulation on stellar
  *  (it won't catch anything if few transactions going out at the same time)
  */
-@Processor({ name: 'sign' })
+@Processor('sign')
 export class SignProcessor {
   private readonly logger = new Logger(SignProcessor.name);
 

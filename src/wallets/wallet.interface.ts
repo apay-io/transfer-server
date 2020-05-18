@@ -20,7 +20,7 @@ export interface Wallet {
 
   submit(rawTx: string, asset: string): Promise<any>;
 
-  getNewAddress(asset): Promise<string>;
+  getNewAddress(asset: string, index: number): Promise<string>;
 
   isValidDestination(asset: string, addressOut: string, addressOutExtra: string): Promise<boolean>;
 

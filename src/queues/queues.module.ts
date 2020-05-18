@@ -1,17 +1,14 @@
 import { Module } from '@nestjs/common';
-import { BullModule, BullModuleOptions } from 'nest-bull';
+import { BullModule, BullModuleOptions } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from 'nestjs-config';
 
-const BullQueueModule = BullModule.registerAsync([
+const BullQueueModule = BullModule.registerQueueAsync(
   {
     name: 'temp-transactions',
     imports: [ConfigModule],
-    useFactory: (configService: ConfigService): BullModuleOptions => {
+    useFactory: (config: ConfigService): BullModuleOptions => {
       return {
-        name: 'temp-transactions',
-        options: {
-          redis: configService.get('redis'),
-        },
+        redis: config.get('redis'),
       };
     },
     inject: [ConfigService],
@@ -19,12 +16,9 @@ const BullQueueModule = BullModule.registerAsync([
   {
     name: 'transactions',
     imports: [ConfigModule],
-    useFactory: (configService: ConfigService): BullModuleOptions => {
+    useFactory: (config: ConfigService): BullModuleOptions => {
       return {
-        name: 'transactions',
-        options: {
-          redis: configService.get('redis'),
-        },
+        redis: config.get('redis'),
       };
     },
     inject: [ConfigService],
@@ -32,12 +26,9 @@ const BullQueueModule = BullModule.registerAsync([
   {
     name: 'sign',
     imports: [ConfigModule],
-    useFactory: (configService: ConfigService): BullModuleOptions => {
+    useFactory: (config: ConfigService): BullModuleOptions => {
       return {
-        name: 'sign',
-        options: {
-          redis: configService.get('redis'),
-        },
+        redis: config.get('redis'),
       };
     },
     inject: [ConfigService],
@@ -45,17 +36,14 @@ const BullQueueModule = BullModule.registerAsync([
   {
     name: 'submit',
     imports: [ConfigModule],
-    useFactory: (configService: ConfigService): BullModuleOptions => {
+    useFactory: (config: ConfigService): BullModuleOptions => {
       return {
-        name: 'submit',
-        options: {
-          redis: configService.get('redis'),
-        },
+        redis: config.get('redis'),
       };
     },
     inject: [ConfigService],
   },
-]);
+);
 
 @Module({
   imports: [

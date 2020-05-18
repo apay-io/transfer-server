@@ -16,7 +16,7 @@ export class BitgoDriver implements WalletInterface {
   ) {
   }
 
-  async getNewAddress(asset): Promise<string> {
+  async getNewAddress(asset, index): Promise<string> {
     const wallet = await this.getWallet(asset);
     const bitGoAddress = await wallet.createAddress({ chain: 20 });
     return bitGoAddress.address;

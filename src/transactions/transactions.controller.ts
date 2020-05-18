@@ -7,7 +7,7 @@ import { Transaction } from './transaction.entity';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TxNotificationDto } from './dto/tx-notification.dto';
 import { TempTransactionsService } from './temp-transactions.service';
-import { InjectQueue } from 'nest-bull';
+import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { TransactionType } from './enums/transaction-type.enum';
 
