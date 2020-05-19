@@ -33,7 +33,7 @@ export class StellarService implements Wallet {
   ) {
   }
 
-  private getServer(asset: string) {
+  getServer(asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
     if (!this.servers[asset]) {
       this.servers[asset] = new Server(assetConfig.horizonUrl);
@@ -103,7 +103,7 @@ export class StellarService implements Wallet {
     };
   }
 
-  private async getModerateFee(asset: string) {
+  async getModerateFee(asset: string) {
     const feeStats = await this.getServer(asset).feeStats();
     return Math.min(parseInt(feeStats.fee_charged.mode, 10), 10000).toString(); // moderate fee, 10000 max
   }
