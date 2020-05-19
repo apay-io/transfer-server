@@ -74,5 +74,5 @@
             "fee_percent": 0.001
         },
         "withdrawalBatching": 60000
-    },
+    }
 ]
