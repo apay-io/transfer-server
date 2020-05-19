@@ -137,7 +137,7 @@ describe('AddressMappingService', () => {
         id: 1,
       });
       expect(spy2.calls.count()).toBe(1);
-      expect(spy3.calls.count()).toBe(1);
+      expect(spy3.calls.count()).toBe(2);
       expect(spy3.calls.argsFor(0)).toStrictEqual([{
         asset: 'TBTC',
         addressIn: 'tb1qtpdvsyqxr8ky3n33gnme048q6jcnsusym7q2kkhmzw5xs3kv9p6suanya5',
@@ -202,7 +202,7 @@ describe('AddressMappingService', () => {
         id: 1,
       });
       expect(spy2.calls.count()).toBe(1);
-      expect(spy3.calls.count()).toBe(1);
+      expect(spy3.calls.count()).toBe(2);
       expect(spy3.calls.argsFor(0)).toStrictEqual([{
         asset: 'TBTC',
         addressIn: 'GAJ4SKSKRWFZVCB5OROZLSWOUC4OEI4QKHV46FDLR3D372KAU3TQEI2X',

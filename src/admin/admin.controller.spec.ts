@@ -3,6 +3,7 @@ import { AdminController } from './admin.controller';
 import { ConfigModule } from 'nestjs-config';
 import * as path from 'path';
 import { TransactionsService } from '../transactions/transactions.service';
+import { QueuesModule } from '../queues/queues.module';
 
 describe('Admin Controller', () => {
   let controller: AdminController;
@@ -15,6 +16,7 @@ describe('Admin Controller', () => {
           path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
           {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
         ),
+        QueuesModule,
       ],
       providers: [
         { provide: TransactionsService, useValue: { find: () => [] } },
