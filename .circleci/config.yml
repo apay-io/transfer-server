@@ -16,7 +16,7 @@ jobs:
 
       # Run tests
       - run: npm run test:cov -- --no-watch --no-progress
-      - sonarcloud/scan -X
+      - sonarcloud/scan
       - persist_to_workspace:
           root: ~/project
           paths: ./*
