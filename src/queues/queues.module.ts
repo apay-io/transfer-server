@@ -2,45 +2,35 @@ import { Module } from '@nestjs/common';
 import { BullModule, BullModuleOptions } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from 'nestjs-config';
 
+const bullModuleFactory = (config: ConfigService): BullModuleOptions => {
+  return {
+    redis: config.get('redis'),
+  };
+};
+
 const BullQueueModule = BullModule.registerQueueAsync(
   {
     name: 'temp-transactions',
     imports: [ConfigModule],
-    useFactory: (config: ConfigService): BullModuleOptions => {
-      return {
-        redis: config.get('redis'),
-      };
-    },
+    useFactory: bullModuleFactory,
     inject: [ConfigService],
   },
   {
     name: 'transactions',
     imports: [ConfigModule],
-    useFactory: (config: ConfigService): BullModuleOptions => {
-      return {
-        redis: config.get('redis'),
-      };
-    },
+    useFactory: bullModuleFactory,
     inject: [ConfigService],
   },
   {
     name: 'sign',
     imports: [ConfigModule],
-    useFactory: (config: ConfigService): BullModuleOptions => {
-      return {
-        redis: config.get('redis'),
-      };
-    },
+    useFactory: bullModuleFactory,
     inject: [ConfigService],
   },
   {
     name: 'submit',
     imports: [ConfigModule],
-    useFactory: (config: ConfigService): BullModuleOptions => {
-      return {
-        redis: config.get('redis'),
-      };
-    },
+    useFactory: bullModuleFactory,
     inject: [ConfigService],
   },
 );
