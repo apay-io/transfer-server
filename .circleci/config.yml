@@ -25,6 +25,7 @@ orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.1
 
 workflows:
+  version: 2
   main:
     jobs:
       - build:
