@@ -16,6 +16,16 @@ jobs:
 
       # Run tests
       - run: npm run test -- --no-watch --no-progress
+      - sonarcloud/scan
       - persist_to_workspace:
           root: ~/project
           paths: ./*
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SONAR_TOKEN
