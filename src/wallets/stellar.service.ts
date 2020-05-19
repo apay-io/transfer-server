@@ -33,7 +33,7 @@ export class StellarService implements Wallet {
   ) {
   }
 
-  private getServer(asset) {
+  private getServer(asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
     if (!this.servers[asset]) {
       this.servers[asset] = new Server(assetConfig.horizonUrl);
@@ -77,11 +77,10 @@ export class StellarService implements Wallet {
     const asset = params.recipients[0].asset;
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
 
-    const feeStats = await this.getServer(asset).feeStats();
     const builder = new TransactionBuilder(
       new Account(params.channel, params.sequence.toString()),
       {
-        fee: Math.min(parseInt(feeStats.fee_charged.mode, 10), 10000), // moderate fee, 10000 max
+        fee: await this.getModerateFee(asset),
         networkPassphrase: assetConfig.networkPassphrase,
       })
       .setTimeout(1200) // 20 min, enough for 10 attempts to submit
@@ -102,6 +101,11 @@ export class StellarService implements Wallet {
       hash: tx.hash().toString('hex'),
       rawTx: tx.toEnvelope().toXDR('base64').toString(),
     };
+  }
+
+  private async getModerateFee(asset: string) {
+    const feeStats = await this.getServer(asset).feeStats();
+    return Math.min(parseInt(feeStats.fee_charged.mode, 10), 10000).toString(); // moderate fee, 10000 max
   }
 
   sign(rawTx: string, asset: string) {
