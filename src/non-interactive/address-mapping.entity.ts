@@ -16,9 +16,9 @@ export class AddressMapping {
 
   @Column({
     length: 255,
-    nullable: false,
+    nullable: true,
   })
-  addressIn: string;
+  addressIn?: string; // can be updated once
 
   @Column({
     length: 255,

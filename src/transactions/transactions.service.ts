@@ -8,7 +8,7 @@ import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TransactionState } from './enums/transaction-state.enum';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
-import { InjectQueue } from 'nest-bull';
+import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as groupBy from 'lodash.groupby';
 import { AssetInterface } from '../interfaces/asset.interface';

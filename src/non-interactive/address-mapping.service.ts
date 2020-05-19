@@ -1,9 +1,8 @@
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { DepositMapping } from './address-mapping.entity';
+import { AddressMapping, DepositMapping } from './address-mapping.entity';
 import { Wallet } from '../wallets/wallet.interface';
-import { AddressMapping } from './address-mapping.entity';
 import { MappingDto } from './dto/mapping.dto';
 import { ValidationError } from 'class-validator';
 
@@ -41,12 +40,13 @@ export class AddressMappingService {
     }
     let mapping = await repo.findOne(dto);
     if (!mapping) {
-      const addressIn = await walletIn.getNewAddress(dto.asset);
       mapping = repo.create({
-        addressIn, ...dto,
+        ...dto,
       });
       const { id } = await repo.save(mapping);
       mapping.id = id;
+      mapping.addressIn = await walletIn.getNewAddress(dto.asset, id);
+      await repo.save(mapping);
     }
     return mapping;
   }

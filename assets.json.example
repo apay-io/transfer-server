@@ -4,8 +4,9 @@
         "driver": {
             "code": "tbtc",
             "env": "test",
-            "accessToken": "BITGO_ACCESS_TOKEN",
-            "walletId": "BITGO_TBTC_WALLET_ID"
+            "accessToken": "BITGO_TEST_ACCESS_TOKEN",
+            "walletId": "BITGO_TBTC_WALLET_ID",
+            "walletPassphrase": "BITGO_TBTC_WALLET_PASS"
         },
         "totalSupply": "1000",
         "stellar": {
@@ -28,6 +29,44 @@
         },
         "horizonUrl": "https://horizon-testnet.stellar.org",
         "networkPassphrase": "Test SDF Network ; September 2015",
+        "withdrawal": {
+            "eta": 1200,
+            "min": 0.0001,
+            "fee_fixed": 0.0001,
+            "fee_percent": 0.001
+        },
+        "withdrawalBatching": 60000
+    },
+    {
+        "code": "BTC",
+        "driver": {
+            "code": "btc",
+            "env": "prod",
+            "accessToken": "BITGO_ACCESS_TOKEN_BTC",
+            "walletId": "BITGO_BTC_WALLET_ID",
+            "walletPassphrase": "BITGO_BTC_WALLET_PASS"
+        },
+        "totalSupply": "200",
+        "stellar": {
+            "issuer": "GAUTUYY2THLF7SGITDFMXJVYH3LHDSMGEAKSBU267M2K7A3W543CKUEF",
+            "name": "",
+            "desc": "",
+            "image": "",
+            "status": "live"
+        },
+        "distributor": "GCR3L4I5C2WE4C5BNHEFHLFSIYHGLZRDAUG3MOWL7R3CVVSI4XL47OTJ",
+        "channels": [
+            "GCR3L4I5C2WE4C5BNHEFHLFSIYHGLZRDAUG3MOWL7R3CVVSI4XL47OTJ"
+        ],
+        "deposit": {
+            "eta": 1200,
+            "min": 0.0001,
+            "fee_create": 0.0001,
+            "fee_fixed": 0,
+            "fee_percent": 0
+        },
+        "horizonUrl": "https://horizon.stellar.org",
+        "networkPassphrase": "Public Global Stellar Network ; September 2015",
         "withdrawal": {
             "eta": 1200,
             "min": 0.0001,

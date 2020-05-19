@@ -1,4 +1,4 @@
-import { InjectQueue, Process, Processor } from 'nest-bull';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
@@ -17,7 +17,7 @@ import { TempTransactionsService } from './temp-transactions.service';
  * Processing initiated by a new confirmation webhook or the trustline from the user
  * Once trustline exists and transaction is final - put into the main processing queue
  */
-@Processor({ name: 'temp-transactions' })
+@Processor('temp-transactions')
 export class TempTransactionsProcessor {
   private readonly logger = new Logger(TempTransactionsProcessor.name);
 

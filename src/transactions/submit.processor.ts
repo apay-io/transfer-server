@@ -1,4 +1,4 @@
-import { InjectQueue, Process, Processor } from 'nest-bull';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
@@ -14,7 +14,7 @@ import { TransactionType } from './enums/transaction-type.enum';
  * Multiple processing of the same job is not a problem, first submission will return success, following submissions are going to fail
  * Saving transaction log just to track processing time
  */
-@Processor({ name: 'submit' })
+@Processor('submit')
 export class SubmitProcessor {
   private readonly logger = new Logger(SubmitProcessor.name);
 

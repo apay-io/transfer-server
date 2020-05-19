@@ -1,4 +1,4 @@
-import { InjectQueue, Process, Processor } from 'nest-bull';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { Transaction } from './transaction.entity';
@@ -14,7 +14,7 @@ import { TransactionsService } from './transactions.service';
  * Worker responsible for preparing transactions for signing
  * Doesn't matter if executed multiple times, sequence has already been defined
  */
-@Processor({ name: 'transactions' })
+@Processor('transactions')
 export class TransactionsProcessor {
   private readonly logger = new Logger(TransactionsProcessor.name);
 

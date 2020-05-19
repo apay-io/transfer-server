@@ -14,6 +14,7 @@
         <th>Tx Out</th>
         <th>Address In</th>
         <th>Address Out</th>
+        <th>Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -31,6 +32,7 @@
             <td>{{{formatTx type asset 'out' txOut}}}</td>
             <td>{{{formatAddress type asset 'in' addressIn}}}</td>
             <td>{{{formatAddress type asset 'out' addressOut}}}</td>
+            <td>{{#unless (eq state 'completed') }}<form method="post" action="/admin/txs/retry/{{id}}"><button>retry</button></form>{{/unless}}</td>
         </tr>
     {{/each}}
     </tbody>
