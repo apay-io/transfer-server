@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -15,7 +15,7 @@ jobs:
           key: node-modules-{{ .Branch }}-{{ checksum "package-lock.json" }}
 
       # Run tests
-      - run: npm run test -- --no-watch --no-progress
+      - run: npm run test:cov -- --no-watch --no-progress
       - sonarcloud/scan
       - persist_to_workspace:
           root: ~/project
