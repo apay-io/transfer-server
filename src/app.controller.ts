@@ -1,8 +1,7 @@
-import { Body, Controller, Get, Header, Post, Render, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Req, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import { AssetInterface } from './interfaces/asset.interface';
 import { WalletFactoryService } from './wallets/wallet-factory.service';
 import { TransactionType } from './transactions/enums/transaction-type.enum';
 

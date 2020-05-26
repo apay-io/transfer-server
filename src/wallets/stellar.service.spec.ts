@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from 'nestjs-config';
 import * as path from 'path';
 import { StellarService } from './stellar.service';
 import { RedisService } from 'nestjs-redis';
-import { Networks } from 'stellar-sdk';
+import { Networks, Server } from 'stellar-sdk';
 
 const account = 'GDKJKGQMA4C4G3GCR6CPSGRTQ5J2XSWG6XLNOFGXPUWMNBU6FRAMVWKG';
 const secret = 'SDNB4NJ7RHJZWEDT265GN67Z4AVZCBGN33YB6G7JVELC7U4IPTCIOL4Q';
@@ -26,10 +26,19 @@ describe('StellarService', () => {
   const configMock = {
     get: () => {
       return {
-        skipFeeEstimation: false
+        skipFeeEstimation: false,
+        networkPassphrase: Networks.TESTNET,
+        getAssetConfig: () => {
+          return {
+            networkPassphrase: Networks.TESTNET
+          };
+        },
+        horizonUrls: {
+          'Test SDF Network ; September 2015': 'https://horizon-testnet.stellar.org',
+        }
       }
     }
-  }
+  };
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -51,6 +60,13 @@ describe('StellarService', () => {
   });
 
   describe('stellar service', () => {
+    it('should get server', async () => {
+      const server = new Server('https://horizon-testnet.stellar.org');
+
+      expect(await driver.getServerByAsset('TBTC')).toStrictEqual(server);
+      expect(await driver.getServer(Networks.TESTNET)).toStrictEqual(server);
+    });
+
     it('should estimate fees', async () => {
       const spy = spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
       expect(await driver.getModerateFee(Networks.PUBLIC)).toStrictEqual('100');

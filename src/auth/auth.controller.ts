@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ConfigService, InjectConfig } from 'nestjs-config';
 import { JwtService } from '@nestjs/jwt';
 import { StellarService } from '../wallets/stellar.service';
@@ -43,7 +43,7 @@ export class AuthController {
   async token(@Body() dto: { transaction: string }): Promise<Sep10TokenResponse> {
     const networkPassphrase = this.config.get('stellar').networkPassphrase;
     const signingKey = this.config.get('stellar').signingKey;
-    const { tx, clientAccountID } = Utils.readChallengeTx(dto.transaction, signingKey, networkPassphrase);
+    const { clientAccountID } = Utils.readChallengeTx(dto.transaction, signingKey, networkPassphrase);
     try {
       const userAccount = await this.stellarService.getServer(networkPassphrase).loadAccount(clientAccountID);
       Utils.verifyChallengeTxThreshold(
