@@ -21,6 +21,11 @@ describe('StellarService', () => {
         }
     }),
     loadAccount: () => Promise.resolve({
+      balances: [
+        { asset_type: 'native', balance: '100' },
+        { asset_type: 'credit_alphanum4', asset_code: 'TBTC',
+          asset_issuer: 'GAIJQAYGJ2TMP7OC5NFBJTPELBHZZJ4LDLTS4JZBV5SMVUKJGKTI4Q3O', balance: '0.5' }
+      ],
       sequenceNumber: () => '123'
     }),
   };
@@ -84,6 +89,11 @@ describe('StellarService', () => {
     it('should get sequence correctly', async () => {
       spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
       expect(await driver.getSequence('TBTC', account)).toStrictEqual('123');
+    });
+
+    it('should get balance correctly', async () => {
+      spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
+      expect(await driver.getBalance('TBTC')).toStrictEqual('0.5');
     });
 
   });
