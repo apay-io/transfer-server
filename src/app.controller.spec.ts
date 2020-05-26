@@ -5,6 +5,19 @@ import { ConfigModule, ConfigService } from 'nestjs-config';
 import * as path from 'path';
 import { WalletsModule } from './wallets/wallets.module';
 import { RedisModule, RedisService } from 'nestjs-redis';
+import Handlebars from 'handlebars';
+import { readFileSync } from 'fs';
+
+const mockResponse = () => {
+  const res = {} as any;
+  res.render = jest.fn().mockImplementation((template, options) => {
+    const tmp = Handlebars.compile(readFileSync(__dirname + '/../views/' + template + '.hbs').toString());
+    return tmp(options);
+  });
+  res.status = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
+  return res;
+};
 
 describe('AppController', () => {
   let appController: AppController;
@@ -34,6 +47,18 @@ describe('AppController', () => {
   describe('root', () => {
     it('should return "Hello World!"', () => {
       expect(appController.getHello()).toBe('Hello World!');
+    });
+
+    it('should generate stellar.toml', () => {
+      const fakeReq = {headers: {host: 'apay.io'}};
+      const res = mockResponse();
+      const response = appController.getStellarToml(fakeReq, res);
+
+      expect(res.render).toHaveBeenCalledTimes(1);
+      expect(response).toContain('TRANSFER_SERVER="https://apay.io"');
+      expect(response).toContain('SIGNING_KEY=');
+      expect(response).toContain('[[CURRENCIES]]');
+      expect(response).toContain('status="live"');
     });
 
     it('should validate address', async () => {

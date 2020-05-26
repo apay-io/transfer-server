@@ -13,6 +13,7 @@ const userSecret = 'SCGEGT7YDA4MY2XIVDHWCPOTX3WMKPODQUNHNY6V2WRDQHYKXSADGVQY';
 
 describe('StellarService', () => {
   let driver: StellarService;
+  let config: ConfigService;
   const fakeHorizon = {
     feeStats: () => {
       return {
@@ -25,7 +26,7 @@ describe('StellarService', () => {
   const configMock = {
     get: () => {
       return {
-        skipFeeEstimation: true
+        skipFeeEstimation: false
       }
     }
   }
@@ -46,12 +47,21 @@ describe('StellarService', () => {
     }).compile();
 
     driver = app.get<StellarService>(StellarService);
+    config = app.get<ConfigService>(ConfigService);
   });
 
   describe('stellar service', () => {
     it('should estimate fees', async () => {
       const spy = spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
       expect(await driver.getModerateFee(Networks.PUBLIC)).toStrictEqual('100');
+      expect(spy.calls.count()).toEqual(1);
+    });
+
+    it('should estimate fees', async () => {
+      spyOn(configMock, 'get').and.returnValue({ skipFeeEstimation: true });
+      const spy = spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
+      expect(await driver.getModerateFee(Networks.PUBLIC)).toStrictEqual('100');
+      expect(spy.calls.count()).toEqual(0);
     });
 
   });

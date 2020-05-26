@@ -16,7 +16,7 @@ import { ConfigService } from 'nestjs-config';
           secret: process.env.JWT_SECRET,
           signOptions: {
             expiresIn: '20m',
-            appName: configService.get('app').appName,
+            issuer: configService.get('app').appName,
           },
         };
       },
