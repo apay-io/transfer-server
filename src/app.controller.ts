@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Header, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Req, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AppService } from './app.service';
 import { ConfigService, InjectConfig } from 'nestjs-config';
-import { AssetInterface } from './interfaces/asset.interface';
 import { WalletFactoryService } from './wallets/wallet-factory.service';
 import { TransactionType } from './transactions/enums/transaction-type.enum';
 
@@ -22,15 +22,21 @@ export class AppController {
 
   @Get('.well-known/stellar.toml')
   @Header('Content-Type', 'text/plain')
-  getStellarToml(@Req() req): string {
-    let text = `TRANSFER_SERVER="${req.headers.host}"\n\n`;
-    this.config.get('assets').raw.forEach((item: AssetInterface) => {
-      text += `[[CURRENCIES]]\ncode="${item.code}"\n`;
-      for (const [key, value] of Object.entries(item.stellar)) {
-        text += `${key}=` + (typeof value === 'string' ? `"${value}"` : value) + `\n`;
-      }
-    });
-    return text;
+  getStellarToml(@Req() req, @Res() res: Response) {
+    return res.render(
+      'stellar-toml',
+      {
+        layout: false,
+        host: req.headers.host,
+        signingKey: this.config.get('stellar').signingKey,
+        tokens: this.config.get('assets').raw.map((item) => {
+          return {
+            ...Object.entries(item.stellar),
+            symbol: item.code
+          };
+        })
+      },
+    );
   }
 
   @Get('/info')

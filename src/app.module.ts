@@ -11,6 +11,7 @@ import { QueuesModule } from './queues/queues.module';
 import { UtilsModule } from './utils/utils.module';
 import { RedisModule } from 'nestjs-redis';
 import { AdminModule } from './admin/admin.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AdminModule } from './admin/admin.module';
     QueuesModule,
     UtilsModule,
     AdminModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

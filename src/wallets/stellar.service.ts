@@ -33,17 +33,21 @@ export class StellarService implements Wallet {
   ) {
   }
 
-  getServer(asset: string) {
+  getServerByAsset(asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
-    if (!this.servers[asset]) {
-      this.servers[asset] = new Server(assetConfig.horizonUrl);
+    return this.getServer(assetConfig.networkPassphrase);
+  }
+
+  getServer(networkPassphrase: string) {
+    if (!this.servers[networkPassphrase]) {
+      this.servers[networkPassphrase] = new Server(this.config.get('stellar').horizonUrls[networkPassphrase]);
     }
-    return this.servers[asset];
+    return this.servers[networkPassphrase];
   }
 
   async checkAccount(address: string, assetCode: string, assetIssuer: string) {
     try {
-      const account = await this.getServer(assetCode).loadAccount(address);
+      const account = await this.getServerByAsset(assetCode).loadAccount(address);
       return {
         exists: true,
         trusts: !!account.balances.find(
@@ -64,13 +68,13 @@ export class StellarService implements Wallet {
 
   // not batching stellar txs, assuming there is only 1 element in recipients array
   async buildPaymentTx(params: {
-    recipients: Array<{
+    recipients: {
       addressOut: string,
       addressOutExtra: string,
       addressOutExtraType: MemoType,
       amount: BigNumber,
       asset: string,
-    }>,
+    }[],
     channel: string,
     sequence: BigNumber,
   }) {
@@ -80,7 +84,7 @@ export class StellarService implements Wallet {
     const builder = new TransactionBuilder(
       new Account(params.channel, params.sequence.toString()),
       {
-        fee: await this.getModerateFee(asset),
+        fee: await this.getModerateFee(assetConfig.networkPassphrase),
         networkPassphrase: assetConfig.networkPassphrase,
       })
       .setTimeout(1200) // 20 min, enough for 10 attempts to submit
@@ -103,8 +107,11 @@ export class StellarService implements Wallet {
     };
   }
 
-  async getModerateFee(asset: string) {
-    const feeStats = await this.getServer(asset).feeStats();
+  async getModerateFee(networkPassphrase: string) {
+    if (this.config.get('stellar').skipFeeEstimation) {
+      return '100';
+    }
+    const feeStats = await this.getServer(networkPassphrase).feeStats();
     return Math.min(parseInt(feeStats.fee_charged.mode, 10), 10000).toString(); // moderate fee, 10000 max
   }
 
@@ -127,11 +134,11 @@ export class StellarService implements Wallet {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
 
     const tx = new Transaction(rawTx, assetConfig.networkPassphrase);
-    return this.getServer(asset).submitTransaction(tx);
+    return this.getServerByAsset(asset).submitTransaction(tx);
   }
 
   getSequence(asset: string, channel: string): Promise<string> {
-    return this.getServer(asset).loadAccount(channel)
+    return this.getServerByAsset(asset).loadAccount(channel)
       .then((account) => account.sequenceNumber());
   }
 
@@ -139,7 +146,7 @@ export class StellarService implements Wallet {
   async getBalance(asset: string) {
     const assetConfig = this.config.get('assets').getAssetConfig(asset);
 
-    const distributor = await this.getServer(asset).loadAccount(assetConfig.distributor);
+    const distributor = await this.getServerByAsset(asset).loadAccount(assetConfig.distributor);
     const distributorBalance = (distributor.balances
       .find((balance) => {
         return balance.asset_type !== 'native' && balance.asset_code === asset && balance.asset_issuer === assetConfig.stellar.issuer;
@@ -149,7 +156,7 @@ export class StellarService implements Wallet {
     if (assetConfig.excluded) {
       for (const excluded of assetConfig.excludedSupply) {
         try {
-          const account = await this.getServer(asset).loadAccount(excluded);
+          const account = await this.getServerByAsset(asset).loadAccount(excluded);
           const accountBalance = (account.balances
             .find((balance) => {
               return balance.asset_type !== 'native' && balance.asset_code === asset && balance.asset_issuer === assetConfig.stellar.issuer;
@@ -174,7 +181,7 @@ export class StellarService implements Wallet {
   }
 
   async checkTransaction(asset: string, txHash: string): Promise<TxOutput[]> {
-    const payments = await this.getServer(asset)
+    const payments = await this.getServerByAsset(asset)
       .payments()
       .forTransaction(txHash)
       .join('transactions')
@@ -224,7 +231,7 @@ export class StellarService implements Wallet {
   }
 
   async listenToPayments(assetConfig: AssetInterface, callback: (op) => Promise<any>) {
-    const builder = this.getServer(assetConfig.code)
+    const builder = this.getServerByAsset(assetConfig.code)
       .payments()
       .forAccount(assetConfig.distributor);
 
