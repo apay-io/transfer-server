@@ -15,13 +15,14 @@ describe('StellarService', () => {
   let driver: StellarService;
   let config: ConfigService;
   const fakeHorizon = {
-    feeStats: () => {
-      return {
+    feeStats: () => Promise.resolve({
         fee_charged: {
           mode: 100,
         }
-      };
-    }
+    }),
+    loadAccount: () => Promise.resolve({
+      sequenceNumber: () => '123'
+    }),
   };
   const configMock = {
     get: () => {
@@ -78,6 +79,11 @@ describe('StellarService', () => {
       const spy = spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
       expect(await driver.getModerateFee(Networks.PUBLIC)).toStrictEqual('100');
       expect(spy.calls.count()).toEqual(0);
+    });
+
+    it('should get sequence correctly', async () => {
+      spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
+      expect(await driver.getSequence('TBTC', account)).toStrictEqual('123');
     });
 
   });
