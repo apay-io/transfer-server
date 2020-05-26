@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import * as rateLimit from 'express-rate-limit';
+import RateLimit from 'express-rate-limit';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as exphbs from 'express-handlebars';
@@ -14,7 +14,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.enableCors();
   app.use(
-    rateLimit({
+    RateLimit({
       windowMs: 15 * 60 * 1000,
       max: 100,
     }),

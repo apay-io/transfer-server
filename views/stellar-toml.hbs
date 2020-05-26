@@ -1,0 +1,32 @@
+TRANSFER_SERVER="https://{{ host }}"
+TRANSFER_SERVER_SEP0024="https://{{ host }}"
+WEB_AUTH_ENDPOINT="https://{{host}}/auth"
+SIGNING_KEY="{{ signingKey }}"
+
+{{#each tokens}}
+[[CURRENCIES]]
+code="{{ this.symbol }}"
+issuer="{{ this.issuer }}"
+display_decimals=7
+name="{{ this.name }}"
+desc="{{ this.desc }}"
+{{#if this.conditions }}
+conditions="{{ this.conditions }}"
+{{/if}}
+image="{{ this.image }}"
+{{#if this.status }}
+status="{{ this.status }}"
+{{ else }}
+status="live"
+{{/if}}
+is_asset_anchored=true
+{{#if this.anchor_asset_type }}
+anchor_asset_type="{{ this.anchor_asset_type }}"
+{{/if}}
+{{#if this.anchor_asset }}
+anchor_asset="{{ this.anchor_asset }}"
+{{ else }}
+anchor_asset="{{ this.symbol }}"
+{{/if}}
+
+{{/each}}

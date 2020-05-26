@@ -9,7 +9,7 @@ services:
     working_dir: /usr/src/app
     ports:
       - 3000:3000
-    command: npm run start:dev
+    command: npm start
     env_file:
       - .env
     networks:
