@@ -36,15 +36,6 @@ describe('AppController', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
 
-    it('should generate stellar.toml', () => {
-      const fakeReq = {headers: {host: 'https://apay.io'}};
-      const response = appController.getStellarToml(fakeReq);
-
-      expect(response).toContain('TRANSFER_SERVER="https://apay.io"');
-      expect(response).toContain('[[CURRENCIES]]');
-      expect(response).toContain('status="live"');
-    });
-
     it('should validate address', async () => {
       const response = await appController.validateDestination({
         asset_code: 'TBTC',

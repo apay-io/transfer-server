@@ -22,6 +22,13 @@ describe('StellarService', () => {
       };
     }
   };
+  const configMock = {
+    get: () => {
+      return {
+        skipFeeEstimation: true
+      }
+    }
+  }
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -31,7 +38,11 @@ describe('StellarService', () => {
           {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
         ),
       ],
-      providers: [StellarService, { provide: RedisService, useValue: {}}],
+      providers: [
+        StellarService,
+        { provide: RedisService, useValue: {}},
+        { provide: ConfigService, useValue: configMock },
+      ],
     }).compile();
 
     driver = app.get<StellarService>(StellarService);
