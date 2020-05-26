@@ -36,7 +36,11 @@ describe('StellarService', () => {
         networkPassphrase: Networks.TESTNET,
         getAssetConfig: () => {
           return {
-            networkPassphrase: Networks.TESTNET
+            networkPassphrase: Networks.TESTNET,
+            stellar: {
+              issuer: 'GAIJQAYGJ2TMP7OC5NFBJTPELBHZZJ4LDLTS4JZBV5SMVUKJGKTI4Q3O',
+            },
+            totalSupply: 200
           };
         },
         horizonUrls: {
@@ -93,7 +97,7 @@ describe('StellarService', () => {
 
     it('should get balance correctly', async () => {
       spyOn(driver, 'getServer').and.returnValue(fakeHorizon);
-      expect(await driver.getBalance('TBTC')).toStrictEqual('0.5');
+      expect((await driver.getBalance('TBTC')).toString()).toStrictEqual('199.5');
     });
 
   });
