@@ -4,7 +4,7 @@ import { ConfigModule, ConfigService } from 'nestjs-config';
 
 const bullModuleFactory = (config: ConfigService): BullModuleOptions => {
   return {
-    redis: config.get('redis'),
+    redis: config.get('redis').url,
   };
 };
 

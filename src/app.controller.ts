@@ -27,11 +27,13 @@ export class AppController {
       'stellar-toml',
       {
         layout: false,
+        companyInfo: this.config.get('app').companyInfo,
         host: req.headers.host,
+        networkPassphrase: this.config.get('stellar').networkPassphrase,
         signingKey: this.config.get('stellar').signingKey,
         tokens: this.config.get('assets').raw.map((item) => {
           return {
-            ...Object.entries(item.stellar),
+            ...item.stellar,
             symbol: item.code
           };
         })
