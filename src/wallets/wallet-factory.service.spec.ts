@@ -1,12 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule, ConfigService } from 'nestjs-config';
+import { ConfigModule } from 'nestjs-config';
 import * as path from 'path';
 import { StellarService } from './stellar.service';
-import { RedisModule, RedisService } from 'nestjs-redis';
-import { Networks, Server } from 'stellar-sdk';
+import { RedisService } from 'nestjs-redis';
 import { WalletFactoryService } from './wallet-factory.service';
 import { TransactionType } from '../transactions/enums/transaction-type.enum';
-import { WalletsModule } from './wallets.module';
 
 describe('WalletFactoryService', () => {
   let walletFactory: WalletFactoryService;
