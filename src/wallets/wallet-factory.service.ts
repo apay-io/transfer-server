@@ -10,7 +10,6 @@ export class WalletFactoryService {
   constructor(
     @InjectConfig()
     readonly config: ConfigService,
-    readonly bitgoDriver: BitgoDriver,
     readonly stellarDriver: StellarService,
   ) {
   }
