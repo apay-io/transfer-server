@@ -17,14 +17,6 @@ export class WalletFactoryService {
 
   get(type: TransactionType, assetCode: string): { walletIn: Wallet, walletOut: Wallet } {
     const wallet: Wallet = null;
-    switch (assetCode.toUpperCase()) {
-      // case 'TBTC':
-      // case 'BTC':
-      //   wallet = this.bitgoDriver;
-      // case 'TETH':
-      // case 'ETH':
-      //   wallet = this.ethereumDriver;
-    }
     return {
       walletIn: type === TransactionType.deposit ? wallet : this.stellarDriver,
       walletOut: type === TransactionType.withdrawal ? wallet : this.stellarDriver,
