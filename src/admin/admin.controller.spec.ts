@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
-import { ConfigModule } from 'nestjs-config';
+import { ConfigModule, ConfigService } from 'nestjs-config';
 import * as path from 'path';
 import { TransactionsService } from '../transactions/transactions.service';
 import { QueuesModule } from '../queues/queues.module';
@@ -19,6 +19,7 @@ describe('Admin Controller', () => {
         QueuesModule,
       ],
       providers: [
+        { provide: ConfigService, useValue: { get: () => { return { url: '' } } } },
         { provide: TransactionsService, useValue: { find: () => [] } },
       ],
     })
