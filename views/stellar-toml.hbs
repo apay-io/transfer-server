@@ -1,7 +1,11 @@
+NETWORK_PASSPHRASE="{{ networkPassphrase }}"
+FEDERATION_SERVER="https://{{ host }}/federation"
 TRANSFER_SERVER="https://{{ host }}"
 TRANSFER_SERVER_SEP0024="https://{{ host }}"
-WEB_AUTH_ENDPOINT="https://{{host}}/auth"
+WEB_AUTH_ENDPOINT="https://{{ host }}/auth"
 SIGNING_KEY="{{ signingKey }}"
+
+{{{ companyInfo }}}
 
 {{#each tokens}}
 [[CURRENCIES]]

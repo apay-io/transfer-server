@@ -7,6 +7,7 @@ import { WalletsModule } from './wallets/wallets.module';
 import { RedisModule, RedisService } from 'nestjs-redis';
 import Handlebars from 'handlebars';
 import { readFileSync } from 'fs';
+import { WalletFactoryService } from './wallets/wallet-factory.service';
 
 const mockResponse = () => {
   const res = {} as any;
@@ -21,6 +22,11 @@ const mockResponse = () => {
 
 describe('AppController', () => {
   let appController: AppController;
+  const walletOutStub = {
+    isValidDestination: jest.fn().mockImplementation((asset, address) => {
+      return address.length > 34;
+    })
+  };
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -38,6 +44,7 @@ describe('AppController', () => {
       ],
       providers: [AppService,
         { provide: RedisService, useValue: {}},
+        { provide: WalletFactoryService, useValue: { get: () => { return { walletOut: walletOutStub } }}}
       ],
     }).compile();
 

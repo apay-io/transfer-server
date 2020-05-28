@@ -4,28 +4,28 @@ const fs = require('fs');
 const StellarSdk = require('stellar-sdk');
 
 const bootstrap = async () => {
-  const assets = JSON.parse(fs.readFileSync('./assets.json'));
+  const assets = JSON.parse(fs.readFileSync('./config/assets.json'));
   let issuerKeypair, distKeypair, channelKeypair;
   for (const asset of assets) {
     const server = new StellarSdk.Server(asset.horizonUrl);
     if (!asset.stellar.issuer) {
       issuerKeypair = StellarSdk.Keypair.random();
       asset.stellar.issuer = issuerKeypair.publicKey();
-      fs.appendFileSync('./.env', `STELLAR_SECRET_${issuerKeypair.publicKey()}=${issuerKeypair.secret()}\n`)
+      fs.appendFileSync(`./${process.env.NODE_ENV}.env`, `STELLAR_SECRET_${issuerKeypair.publicKey()}=${issuerKeypair.secret()}\n`)
     } else {
       issuerKeypair = StellarSdk.Keypair.fromSecret(process.env[`STELLAR_SECRET_${asset.stellar.issuer}`]);
     }
     if (!asset.distributor) {
       distKeypair = StellarSdk.Keypair.random();
       asset.distributor = distKeypair.publicKey();
-      fs.appendFileSync('./.env', `STELLAR_SECRET_${distKeypair.publicKey()}=${distKeypair.secret()}\n`)
+      fs.appendFileSync(`./${process.env.NODE_ENV}.env`, `STELLAR_SECRET_${distKeypair.publicKey()}=${distKeypair.secret()}\n`)
     } else {
       distKeypair = StellarSdk.Keypair.fromSecret(process.env[`STELLAR_SECRET_${asset.distributor}`]);
     }
     if (!asset.channels || asset.channels.length === 0) {
       channelKeypair = StellarSdk.Keypair.random();
       asset.channels = [channelKeypair.publicKey()];
-      fs.appendFileSync('./.env', `STELLAR_SECRET_${channelKeypair.publicKey()}=${channelKeypair.secret()}\n`)
+      fs.appendFileSync(`./${process.env.NODE_ENV}.env`, `STELLAR_SECRET_${channelKeypair.publicKey()}=${channelKeypair.secret()}\n`)
     } else {
       channelKeypair = StellarSdk.Keypair.fromSecret(process.env[`STELLAR_SECRET_${asset.channels[0]}`]);
     }
@@ -64,7 +64,7 @@ const bootstrap = async () => {
       console.log(err.response.data);
     }
   }
-  fs.writeFileSync('./assets.json', JSON.stringify(assets, null, 4));
+  fs.writeFileSync('./config/assets.json', JSON.stringify(assets, null, 4));
 };
 
 if (process.env.NODE_ENV !== 'production') {

@@ -24,7 +24,7 @@ import { AuthModule } from './auth/auth.module';
       inject: [ConfigService],
     }),
     RedisModule.forRootAsync({
-      useFactory: (configService: ConfigService) => configService.get('redis'),
+      useFactory: (config: ConfigService) => config.get('redis'),
       inject: [ConfigService],
     }),
     TransactionsModule,

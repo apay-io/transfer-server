@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transfer-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transfer-server
+  template:
+    metadata:
+      labels:
+        app: transfer-server
+    spec:
+      containers:
+        - name: transfer-server
+          image: umbrel/transfer-server:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: transfer-server-secrets
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: transfer-server-config-volume
+              mountPath: /usr/src/app/config
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+      volumes:
+        - name: transfer-server-config-volume
+          configMap:
+            name: transfer-server-config
+            items:
+            - key: assets.json
+              path: assets.json
+            - key: postgres.crt
+              path: postgres.crt
