@@ -5,13 +5,13 @@ import { MemoType } from 'stellar-sdk';
 export interface Wallet {
 
   buildPaymentTx(params: {
-    recipients: Array<{
+    recipients: {
       addressOut: string,
       addressOutExtra: string,
       addressOutExtraType: MemoType,
       amount: BigNumber,
       asset: string,
-    }>,
+    }[],
     channel: string,
     sequence: BigNumber,
   }): Promise<{ hash: string, rawTx: string }>;
