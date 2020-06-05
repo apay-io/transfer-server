@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import { WalletsModule } from '../wallets/wallets.module';
-import { ConfigService } from 'nestjs-config';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   controllers: [AuthController],

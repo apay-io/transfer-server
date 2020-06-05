@@ -1,22 +1,23 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ConfigService, InjectConfig } from 'nestjs-config';
+import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { StellarService } from '../wallets/stellar.service';
 import { Utils, Keypair } from 'stellar-sdk';
+import { ChallengeRequest } from './dto/challenge-request.dto';
+import { TokenRequest } from './dto/token-request.dto';
+import { ConfigService } from '@nestjs/config';
 
-interface Sep10ChallengeResponse {
+interface ChallengeResponse {
   transaction: string;
   network_passphrase?: string;
 }
 
-interface Sep10TokenResponse {
+interface TokenResponse {
   token: string;
 }
 
 @Controller('/auth')
 export class AuthController {
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly stellarService: StellarService,
     private readonly jwtService: JwtService,
@@ -24,13 +25,13 @@ export class AuthController {
   }
 
   @Get()
-  async challenge(@Query('account') userAccount: string): Promise<Sep10ChallengeResponse> {
+  async challenge(@Query() challengeRequest: ChallengeRequest): Promise<ChallengeResponse> {
     const networkPassphrase = this.config.get('stellar').networkPassphrase;
     const signingKey = this.config.get('stellar').signingKey;
     return {
       transaction: Utils.buildChallengeTx(
         Keypair.fromSecret(this.config.get('stellar').getSecretForAccount(signingKey)),
-        userAccount,
+        challengeRequest.account,
         this.config.get('app').appName,
         300,
         networkPassphrase
@@ -40,7 +41,7 @@ export class AuthController {
   }
 
   @Post()
-  async token(@Body() dto: { transaction: string }): Promise<Sep10TokenResponse> {
+  async token(@Body() dto: TokenRequest): Promise<TokenResponse> {
     const networkPassphrase = this.config.get('stellar').networkPassphrase;
     const signingKey = this.config.get('stellar').signingKey;
     const { clientAccountID } = Utils.readChallengeTx(dto.transaction, signingKey, networkPassphrase);
@@ -55,14 +56,22 @@ export class AuthController {
       );
     } catch (err) {
       if (err.name === 'NotFoundError') {
-        Utils.verifyChallengeTxSigners(
-          dto.transaction,
-          signingKey,
-          networkPassphrase,
-          [clientAccountID]
-        );
+        try {
+          Utils.verifyChallengeTxSigners(
+            dto.transaction,
+            signingKey,
+            networkPassphrase,
+            [clientAccountID]
+          );
+        } catch (error) {
+          throw new BadRequestException({
+            error: error.message
+          });
+        }
       } else {
-        throw err;
+        throw new BadRequestException({
+          error: err.message
+        });
       }
     }
     const payload = {
