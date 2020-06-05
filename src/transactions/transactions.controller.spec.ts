@@ -1,6 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule, ConfigService } from 'nestjs-config';
-import * as path from 'path';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
@@ -9,6 +7,7 @@ import { TransactionState } from './enums/transaction-state.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TempTransactionsService } from './temp-transactions.service';
 import { QueuesModule } from '../queues/queues.module';
+import { ConfigModule } from '@nestjs/config';
 
 const mockService = jest.fn(() => ({
   find: () => [],
@@ -27,10 +26,9 @@ describe('TransactionsController', () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [TransactionsController],
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
+        ConfigModule.forRoot({
+          envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
+        }),
         QueuesModule,
       ],
       providers: [

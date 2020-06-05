@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
-import { ConfigModule, ConfigService } from 'nestjs-config';
-import * as path from 'path';
 import { TransactionsService } from '../transactions/transactions.service';
 import { QueuesModule } from '../queues/queues.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 describe('Admin Controller', () => {
   let controller: AdminController;
@@ -12,10 +11,9 @@ describe('Admin Controller', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
+        ConfigModule.forRoot({
+          envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
+        }),
         QueuesModule,
       ],
       providers: [

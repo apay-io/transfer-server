@@ -3,13 +3,12 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { Response } from 'express';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { ConfigService, InjectConfig } from 'nestjs-config';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('admin')
 export class AdminController {
 
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly txsService: TransactionsService,
     @InjectQueue('transactions') readonly txsQueue: Queue,

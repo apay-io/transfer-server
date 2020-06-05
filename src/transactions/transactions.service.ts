@@ -6,18 +6,17 @@ import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TransactionState } from './enums/transaction-state.enum';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as groupBy from 'lodash.groupby';
 import { AssetInterface } from '../interfaces/asset.interface';
 import { TransactionsFilterInternalDto } from './dto/transactions-filter-internal.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TransactionsService implements OnApplicationBootstrap {
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     @InjectRepository(Transaction)
     protected readonly repo: Repository<Transaction>,

@@ -2,13 +2,13 @@ import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { Transaction } from './transaction.entity';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionLogsService } from './transaction-logs.service';
 import { TransactionLog } from './transaction-log.entity';
 import { BigNumber } from 'bignumber.js';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionsService } from './transactions.service';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Worker responsible for preparing transactions for signing
@@ -19,7 +19,6 @@ export class TransactionsProcessor {
   private readonly logger = new Logger(TransactionsProcessor.name);
 
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly walletFactoryService: WalletFactoryService,
     private readonly transactionsService: TransactionsService,

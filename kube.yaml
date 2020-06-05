@@ -37,3 +37,5 @@ spec:
               path: assets.json
             - key: postgres.crt
               path: postgres.crt
+            - key: stellar.toml
+              path: stellar.toml

@@ -32,6 +32,7 @@
   "dependencies": {
     "@nestjs/bull": "0.1.1",
     "@nestjs/common": "7.1.0",
+    "@nestjs/config": "^0.5.0",
     "@nestjs/core": "7.1.0",
     "@nestjs/jwt": "7.0.0",
     "@nestjs/passport": "7.0.0",
@@ -44,7 +45,6 @@
     "express-rate-limit": "typescript",
     "hbs": "4.1.1",
     "lodash.groupby": "4.6.0",
-    "nestjs-config": "1.4.6",
     "nestjs-redis": "1.2.8",
     "passport": "0.4.1",
     "passport-jwt": "4.0.0",

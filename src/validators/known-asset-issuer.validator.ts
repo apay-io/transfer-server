@@ -10,7 +10,7 @@ import assets from '../config/assets';
 @ValidatorConstraint()
 export class IsKnownAssetIssuerConstraint implements ValidatorConstraintInterface {
   validate(issuer: string, args: ValidationArguments) {
-    return assets.raw.find((item) => item.stellar.issuer === issuer);
+    return assets().raw.find((item) => item.stellar.issuer === issuer);
   }
 
   defaultMessage(args: ValidationArguments) {

@@ -6,12 +6,12 @@ import { TransactionsService } from './transactions.service';
 import { TransactionType } from './enums/transaction-type.enum';
 import { TransactionState } from './enums/transaction-state.enum';
 import { BigNumber } from 'bignumber.js';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { UtilsService } from '../utils/utils.service';
 import { StellarService } from '../wallets/stellar.service';
 import { AddressMappingService } from '../non-interactive/address-mapping.service';
 import { Transaction } from './transaction.entity';
 import { TempTransactionsService } from './temp-transactions.service';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Processing initiated by a new confirmation webhook or the trustline from the user
@@ -22,7 +22,6 @@ export class TempTransactionsProcessor {
   private readonly logger = new Logger(TempTransactionsProcessor.name);
 
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly utilsService: UtilsService,
     private readonly mappingService: AddressMappingService,

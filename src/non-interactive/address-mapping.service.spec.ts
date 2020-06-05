@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from 'nestjs-config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DepositMapping } from './address-mapping.entity';
 import { Repository } from 'typeorm';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
-// import { BitgoDriver } from '../wallets/drivers/bitgo.driver';
 import { AddressMappingService } from './address-mapping.service';
 import { AddressMapping } from './address-mapping.entity';
 import { StellarService } from '../wallets/stellar.service';
+import { ConfigService } from '@nestjs/config';
 
 const RepositoryMock = jest.fn(() => ({
   create: (mapping) => mapping,

@@ -1,10 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule } from 'nestjs-config';
-import * as path from 'path';
 import { StellarService } from './stellar.service';
 import { RedisService } from 'nestjs-redis';
 import { WalletFactoryService } from './wallet-factory.service';
 import { TransactionType } from '../transactions/enums/transaction-type.enum';
+import { ConfigModule } from '@nestjs/config';
 
 describe('WalletFactoryService', () => {
   let walletFactory: WalletFactoryService;
@@ -12,10 +11,9 @@ describe('WalletFactoryService', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
+        ConfigModule.forRoot({
+          envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
+        }),
       ],
       providers: [
         { provide: RedisService, useValue: {}},
