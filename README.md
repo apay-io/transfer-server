@@ -1,6 +1,6 @@
 # Stellar Anchor
 
-[![CircleCI](https://circleci.com/gh/apay-io/stellar-anchor.svg?style=shield)](https://circleci.com/gh/apay-io/stellar-anchor)
+[![CircleCI](https://circleci.com/gh/apay-io/transfer-server.svg?style=shield)](https://circleci.com/gh/apay-io/transfer-server)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=apay-io_stellar-anchor&metric=alert_status)](https://sonarcloud.io/dashboard?id=apay-io_stellar-anchor)
 
 IMPORTANT DISCLAIMER: This code should not be used in production without a thorough security audit.
