@@ -10,7 +10,7 @@ Before running the project, follow the following steps to customize your environ
 
 ```
 cp .env.example .env
-cp assets.json.example assets.json
+cp assets.json.example config/assets.json
 ```
 
 adjust values in `.env` and `assets.json` according to your preferences
