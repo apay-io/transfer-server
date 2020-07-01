@@ -34,7 +34,7 @@
     "@nestjs/common": "7.1.0",
     "@nestjs/core": "7.1.0",
     "@nestjs/jwt": "7.0.0",
-    "@nestjs/passport": "7.0.0",
+    "@nestjs/passport": "7.1.0",
     "@nestjs/platform-express": "7.1.0",
     "@nestjs/typeorm": "7.1.0",
     "bull": "3.15.0",
