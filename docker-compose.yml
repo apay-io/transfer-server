@@ -3,9 +3,12 @@ version: '3.7'
 services:
   transfer-server:
     container_name: transfer-server
-    image: node:12-alpine
+    build:
+      context: .
+      target: development
     volumes:
       - .:/usr/src/app
+      - /usr/src/app/node_modules
     working_dir: /usr/src/app
     ports:
       - 3000:3000
@@ -20,6 +23,8 @@ services:
   transfer-server-redis:
     container_name: transfer-server-redis
     image: redis:5
+    ports:
+      - 6379:6379
     networks:
       - webnet
   transfer-server-postgres:

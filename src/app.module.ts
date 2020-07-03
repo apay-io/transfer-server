@@ -25,6 +25,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     ConfigModule.forRoot({
       envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
       load: [app, assets, database, queue, redis, stellar],
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       useFactory: (config: ConfigService) => config.get('database'),
@@ -41,9 +42,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     UtilsModule,
     AdminModule,
     AuthModule,
+    InteractiveModule,
+    KycModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ConfigService],
 })
 export class AppModule {
 }

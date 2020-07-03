@@ -10,6 +10,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { TransactionType } from './enums/transaction-type.enum';
 import { ConfigService } from '@nestjs/config';
+import { TransactionState } from './enums/transaction-state.enum';
 
 @Controller()
 export class TransactionsController {
@@ -57,6 +58,20 @@ export class TransactionsController {
     }
     const tx = await this.transactionsService.getTxById(transactionFilterDto);
     if (!tx) {
+      if (transactionFilterDto.id) {
+        const tempTx = await this.tempTransactionsService.getTxById(transactionFilterDto.id)
+        if (tempTx) {
+          return {
+            transaction: {
+              id: tempTx.uuid,
+              kind: tempTx.type,
+              status: TransactionState.incomplete,
+              // status_eta:
+
+            } as TransactionDto,
+          };
+        }
+      }
       return response.status(404);
     }
     return {

@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn, Unique,
 
 } from 'typeorm';
+import { TransactionType } from './enums/transaction-type.enum';
 
 /**
  * Entity to store tx hashes passed through webhooks
@@ -27,6 +28,16 @@ export class TempTransaction {
 
   @Column({length: 255, nullable: false})
   asset: string;
+
+  @Column({
+    type: 'enum',
+    enum: [
+      TransactionType.deposit,
+      TransactionType.withdrawal,
+    ],
+    default: TransactionType.deposit,
+  })
+  type: TransactionType;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -45,33 +45,35 @@ export class AuthController {
     const networkPassphrase = this.config.get('stellar').networkPassphrase;
     const signingKey = this.config.get('stellar').signingKey;
     const { clientAccountID } = Utils.readChallengeTx(dto.transaction, signingKey, networkPassphrase);
-    try {
-      const userAccount = await this.stellarService.getServer(networkPassphrase).loadAccount(clientAccountID);
-      Utils.verifyChallengeTxThreshold(
-        dto.transaction,
-        signingKey,
-        networkPassphrase,
-        userAccount.thresholds.med_threshold,
-        userAccount.signers
-      );
-    } catch (err) {
-      if (err.name === 'NotFoundError') {
-        try {
-          Utils.verifyChallengeTxSigners(
-            dto.transaction,
-            signingKey,
-            networkPassphrase,
-            [clientAccountID]
-          );
-        } catch (error) {
+    if (!this.config.get('TESTING_AUTH_DONT_VERIFY')) {
+      try {
+        const userAccount = await this.stellarService.getServer(networkPassphrase).loadAccount(clientAccountID);
+        Utils.verifyChallengeTxThreshold(
+          dto.transaction,
+          signingKey,
+          networkPassphrase,
+          userAccount.thresholds.med_threshold,
+          userAccount.signers
+        );
+      } catch (err) {
+        if (err.name === 'NotFoundError') {
+          try {
+            Utils.verifyChallengeTxSigners(
+              dto.transaction,
+              signingKey,
+              networkPassphrase,
+              [clientAccountID]
+            );
+          } catch (error) {
+            throw new BadRequestException({
+              error: error.message
+            });
+          }
+        } else {
           throw new BadRequestException({
-            error: error.message
+            error: err.message
           });
         }
-      } else {
-        throw new BadRequestException({
-          error: err.message
-        });
       }
     }
     const payload = {
