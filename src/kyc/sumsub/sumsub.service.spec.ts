@@ -26,6 +26,6 @@ describe('SumsubService', () => {
 
   it('applicant created', async () => {
     const result = await service.createApplicant('0a58e90b-dc0a-4ed3-82e4-b3bd5177ea97');
-    expect(result.status).toBe(201);
+    expect(result).toHaveProperty('type', 'individual');
   });
 });

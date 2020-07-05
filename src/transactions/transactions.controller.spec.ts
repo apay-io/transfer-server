@@ -15,6 +15,7 @@ const mockService = jest.fn(() => ({
   getTxById: () => null,
 }));
 const mockTempService = jest.fn(() => ({
+  getTxById: () => null,
   save: (chain, dto) => dto,
 }));
 

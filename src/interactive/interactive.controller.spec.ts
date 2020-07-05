@@ -7,6 +7,7 @@ import { Transaction } from '../transactions/transaction.entity';
 import { TransactionLog } from '../transactions/transaction-log.entity';
 import { QueuesModule } from '../queues/queues.module';
 import { TempTransactionsService } from '../transactions/temp-transactions.service';
+import { ConfigService } from '@nestjs/config';
 
 describe('Interactive Controller', () => {
   let controller: InteractiveController;
@@ -17,6 +18,10 @@ describe('Interactive Controller', () => {
       ],
       controllers: [InteractiveController],
       providers: [
+        {
+          provide: ConfigService,
+          useValue: {}
+        },
         {
           provide: TempTransactionsService,
           useValue: {},

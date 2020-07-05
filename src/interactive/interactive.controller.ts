@@ -24,7 +24,6 @@ export class InteractiveController {
   constructor(
     private readonly config: ConfigService,
     private readonly tempTxService: TempTransactionsService,
-    private readonly userService: UserService,
   ) {
   }
 

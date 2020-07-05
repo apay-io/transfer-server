@@ -18,14 +18,21 @@ describe('AuthController', () => {
   let authController: AuthController;
   let stellarService: StellarService;
   const mockConfig = {
-    get: () => {
-      return {
-        networkPassphrase: Networks.TESTNET,
-        signingKey: account,
-        getSecretForAccount(dummy: string) {
-          return secret;
-        }
-      }
+    get: (key) => {
+      const map = {
+        app: {
+          appName: 'apay.io',
+        },
+        stellar: {
+          networkPassphrase: Networks.TESTNET,
+          signingKey: account,
+          getSecretForAccount(dummy: string) {
+            return secret;
+          }
+        },
+        TESTING_AUTH_DONT_VERIFY: false,
+      };
+      return map[key];
     }
   };
 
@@ -60,7 +67,7 @@ describe('AuthController', () => {
 
       const result = await authController.challenge({ account: userAccount });
       expect(result.network_passphrase).toBe(Networks.TESTNET);
-      expect(result.transaction.startsWith('AAAAANSVGgwHBcNswo+E+Rozh1Orysb11tcU130sxoaeLEDKAAAAZAAAAAAAAAAAAAAAAQAAAABbOdq/AAAAAFs52+sAAAAAAAAAAQAAAAEAAAAAra5I3emuoaB1SwYQ297p5fvnkI5KGS2Oj0Mwg283cDMAAAAKAAAADnVuZGVmaW5lZCBhdXRoAAAAAAABAAAAQ')).toBeTruthy();
+      expect(result.transaction.startsWith('AAAAANSVGgwHBcNswo+E+Rozh1Orysb11tcU130sxoaeLEDKAAAAZAAAAAAAAAAAAAAAAQAAAABbOdq/AAAAAFs52+sAAAAAAAAAAQAAAAEAAAAAra5I3emuoaB1SwYQ297p5fvnkI5KGS2Oj0Mwg283cDMAAAAKAAAAD')).toBeTruthy();
     });
 
     it('should validate signed token', async () => {
