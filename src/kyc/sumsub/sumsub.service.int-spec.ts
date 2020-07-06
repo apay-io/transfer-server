@@ -20,7 +20,13 @@ describe('SumsubService', () => {
     service = module.get<SumsubService>(SumsubService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('applicant created', async () => {
+    const result = await service.createApplicant('0a58e90b-dc0a-4ed3-82e4-b3bd5177ea97');
+    expect(result).toHaveProperty('type', 'individual');
+  });
+
+  it('access token generated', async () => {
+    const result = await service.accessToken('0a58e90b-dc0a-4ed3-82e4-b3bd5177ea97');
+    expect(result).toHaveProperty('token');
   });
 });

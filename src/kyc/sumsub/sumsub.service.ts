@@ -12,10 +12,7 @@ export class SumsubService {
   }
 
   async accessToken(userId: string) {
-    return this.request('POST', '/resources/accessTokens', {
-      userId,
-      ttlInSecs: 1200,
-    })
+    return this.request('POST', `/resources/accessTokens?userId=${userId}&ttlInSecs=1200`, null)
       .then(response => {
         return response.data;
       });
@@ -57,14 +54,18 @@ export class SumsubService {
       headers: {
         'Content-Type': 'application/json',
         'X-App-Token': this.config.get<string>('SUMSUB_TOKEN'),
-        'X-App-Access-Sig': this.sign(ts, method, '/resources/applicants',data && JSON.stringify(data)),
+        'X-App-Access-Sig': this.sign(ts, method, path,data && JSON.stringify(data)),
         'X-App-Access-Ts': ts,
       }
     };
     return (method === 'POST'
       ? this.http.post(this.config.get<string>('SUMSUB_BASEURL') + path, JSON.stringify(data), requestConfig)
       : this.http.get(this.config.get<string>('SUMSUB_BASEURL') + path, requestConfig)
-    ).toPromise();
+    ).toPromise()
+      .catch(err => {
+        console.error(err);
+        throw err;
+      });
   }
 
   sign(ts: string, method: string, path: string, data: string) {
