@@ -1,9 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule, ConfigService } from 'nestjs-config';
-import * as path from 'path';
 import { StellarService } from './stellar.service';
 import { RedisService } from 'nestjs-redis';
 import { Networks, Server } from 'stellar-sdk';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 const account = 'GDKJKGQMA4C4G3GCR6CPSGRTQ5J2XSWG6XLNOFGXPUWMNBU6FRAMVWKG';
 const secret = 'SDNB4NJ7RHJZWEDT265GN67Z4AVZCBGN33YB6G7JVELC7U4IPTCIOL4Q';
@@ -53,10 +52,9 @@ describe('StellarService', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
+        ConfigModule.forRoot({
+          envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
+        }),
       ],
       providers: [
         StellarService,

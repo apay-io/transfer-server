@@ -1,13 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from 'nestjs-config';
-import * as path from 'path';
 import { WalletsModule } from './wallets/wallets.module';
 import { RedisModule, RedisService } from 'nestjs-redis';
 import Handlebars from 'handlebars';
 import { readFileSync } from 'fs';
 import { WalletFactoryService } from './wallets/wallet-factory.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import redis from './config/redis';
+import app from './config/app';
+import assets from './config/assets';
 
 const mockResponse = () => {
   const res = {} as any;
@@ -29,26 +31,24 @@ describe('AppController', () => {
   };
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+    const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
-        RedisModule.forRootAsync({
-          useFactory: (configService: ConfigService) => configService.get('redis'),
-          inject: [ConfigService],
+        ConfigModule.forRoot({
+          envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
+          load: [app, assets, redis],
         }),
+        RedisModule.register({ url: 'redis://:@transfer-server-redis:6379' }),
         WalletsModule,
       ],
       providers: [AppService,
+        ConfigService,
         { provide: RedisService, useValue: {}},
         { provide: WalletFactoryService, useValue: { get: () => { return { walletOut: walletOutStub } }}}
       ],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appController = testingModule.get<AppController>(AppController);
   });
 
   describe('root', () => {

@@ -1,6 +1,6 @@
 /* tslint:disable:variable-name */
 import { TransactionType } from '../enums/transaction-type.enum';
-import { IsEnum, IsInt, IsISO8601, IsNotEmpty, IsNumberString, IsOptional, IsPositive } from 'class-validator';
+import { IsEnum, IsInt, IsISO8601, IsNumberString, IsOptional, IsPositive } from 'class-validator';
 import { IsStellarAccount } from '../../validators/stellar-account.validator';
 import { IsKnownAsset } from '../../validators/known-asset.validator';
 import { IsKnownAssetIssuer } from '../../validators/known-asset-issuer.validator';

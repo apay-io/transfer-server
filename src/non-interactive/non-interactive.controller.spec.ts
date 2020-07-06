@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from 'nestjs-config';
 import { NonInteractiveController } from './non-interactive.controller';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
@@ -9,6 +8,7 @@ import { DepositMapping } from './address-mapping.entity';
 import { AddressMapping } from './address-mapping.entity';
 import { AddressMappingService } from './address-mapping.service';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
+import { ConfigService } from '@nestjs/config';
 
 const mockService = jest.fn(() => ({
   getAddressMapping: () => '',

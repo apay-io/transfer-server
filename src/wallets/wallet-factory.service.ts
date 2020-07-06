@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { StellarService } from './stellar.service';
 import { Wallet } from './wallet.interface';
 import { TransactionType } from '../transactions/enums/transaction-type.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class WalletFactoryService {
 
   constructor(
-    @InjectConfig()
     readonly config: ConfigService,
     readonly stellarDriver: StellarService,
   ) {

@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Post, Query, UseInterceptors } from '@nestjs/common';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { DepositDto } from './dto/deposit.dto';
 import { DepositResponseDto } from './dto/deposit-response.dto';
 import { AssetInterface } from '../interfaces/asset.interface';
@@ -15,11 +14,11 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressMapping } from './address-mapping.entity';
 import { TransactionType } from '../transactions/enums/transaction-type.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class NonInteractiveController {
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly stellarService: StellarService,
     @InjectRepository(AddressMapping)

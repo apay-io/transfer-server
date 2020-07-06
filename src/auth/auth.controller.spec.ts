@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule, ConfigService } from 'nestjs-config';
-import * as path from 'path';
 import { AuthController } from './auth.controller';
 import { StellarService } from '../wallets/stellar.service';
 import { RedisService } from 'nestjs-redis';
 import { JwtModule } from '@nestjs/jwt';
 import { Networks, Transaction, Keypair, NotFoundError } from 'stellar-sdk';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import app from '../config/app';
 global.Date.now = jest.fn(() => 1530518207007);
 
 const account = 'GDKJKGQMA4C4G3GCR6CPSGRTQ5J2XSWG6XLNOFGXPUWMNBU6FRAMVWKG';
@@ -18,14 +18,21 @@ describe('AuthController', () => {
   let authController: AuthController;
   let stellarService: StellarService;
   const mockConfig = {
-    get: () => {
-      return {
-        networkPassphrase: Networks.TESTNET,
-        signingKey: account,
-        getSecretForAccount(dummy: string) {
-          return secret;
-        }
-      }
+    get: (key) => {
+      const map = {
+        app: {
+          appName: 'apay.io',
+        },
+        stellar: {
+          networkPassphrase: Networks.TESTNET,
+          signingKey: account,
+          getSecretForAccount(dummy: string) {
+            return secret;
+          }
+        },
+        TESTING_AUTH_DONT_VERIFY: false,
+      };
+      return map[key];
     }
   };
 
@@ -33,10 +40,9 @@ describe('AuthController', () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       imports: [
-        ConfigModule.load(
-          path.resolve(__dirname, 'config/**/!(*.d).{ts,js}'),
-          {path: process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'},
-        ),
+        ConfigModule.forRoot({
+          envFilePath: [process.cwd() + '/' + (process.env.NODE_ENV || '') + '.env'],
+        }),
         JwtModule.register({
           secret: 'secret',
           signOptions: {
@@ -59,13 +65,13 @@ describe('AuthController', () => {
   describe('/auth', () => {
     it('should generate challenge token', async () => {
 
-      const result = await authController.challenge(userAccount);
+      const result = await authController.challenge({ account: userAccount });
       expect(result.network_passphrase).toBe(Networks.TESTNET);
-      expect(result.transaction.startsWith('AAAAANSVGgwHBcNswo+E+Rozh1Orysb11tcU130sxoaeLEDKAAAAZAAAAAAAAAAAAAAAAQAAAABbOdq/AAAAAFs52+sAAAAAAAAAAQAAAAEAAAAAra5I3emuoaB1SwYQ297p5fvnkI5KGS2Oj0Mwg283cDMAAAAKAAAADnVuZGVmaW5lZCBhdXRoAAAAAAABAAAAQ')).toBeTruthy();
+      expect(result.transaction.startsWith('AAAAANSVGgwHBcNswo+E+Rozh1Orysb11tcU130sxoaeLEDKAAAAZAAAAAAAAAAAAAAAAQAAAABbOdq/AAAAAFs52+sAAAAAAAAAAQAAAAEAAAAAra5I3emuoaB1SwYQ297p5fvnkI5KGS2Oj0Mwg283cDMAAAAKAAAAD')).toBeTruthy();
     });
 
     it('should validate signed token', async () => {
-      const challenge = await authController.challenge(userAccount);
+      const challenge = await authController.challenge({ account: userAccount });
 
       const tx = new Transaction(challenge.transaction, Networks.TESTNET);
       tx.sign(Keypair.fromSecret(userSecret));
@@ -91,7 +97,7 @@ describe('AuthController', () => {
     });
 
     it('should validate signed token for non-existent account', async () => {
-      const challenge = await authController.challenge(userAccount);
+      const challenge = await authController.challenge({ account: userAccount });
 
       const tx = new Transaction(challenge.transaction, Networks.TESTNET);
       tx.sign(Keypair.fromSecret(userSecret));
@@ -106,7 +112,7 @@ describe('AuthController', () => {
     });
 
     it('should throw during token validation for unsigned transaction', async () => {
-      const challenge = await authController.challenge(userAccount);
+      const challenge = await authController.challenge({ account: userAccount });
 
       spyOn(stellarService, 'getServer').and.returnValue({
         loadAccount: () => {

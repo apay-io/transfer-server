@@ -22,4 +22,8 @@ export class TempTransactionsService {
       asset, hash,
     });
   }
+
+  getTxById(id: string): Promise<TempTransaction> {
+    return this.repo.findOne(id);
+  }
 }

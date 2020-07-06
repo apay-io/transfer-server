@@ -10,6 +10,8 @@ COPY . .
 
 RUN npm run build
 
+CMD ["node", "dist/main"]
+
 
 FROM node:12.18-alpine as production
 

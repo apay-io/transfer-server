@@ -13,13 +13,13 @@ import {
   StrKey,
   MemoID
 } from 'stellar-sdk';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { BigNumber } from 'bignumber.js';
 import BalanceLineAsset = Horizon.BalanceLineAsset;
 import { Wallet } from './wallet.interface';
 import { TxOutput } from './dto/tx-output.dto';
 import { AssetInterface } from '../interfaces/asset.interface';
 import { RedisService } from 'nestjs-redis';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class StellarService implements Wallet {
@@ -27,7 +27,6 @@ export class StellarService implements Wallet {
   private sequences = {};
 
   constructor(
-    @InjectConfig()
     readonly config: ConfigService,
     private readonly redisService: RedisService,
   ) {

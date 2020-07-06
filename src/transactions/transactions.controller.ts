@@ -1,5 +1,4 @@
 import { Body, Controller, ForbiddenException, Get, Logger, Param, Post, Query, Res } from '@nestjs/common';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionsService } from './transactions.service';
 import { TransactionDto } from './dto/transaction.dto';
@@ -10,13 +9,14 @@ import { TempTransactionsService } from './temp-transactions.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { TransactionType } from './enums/transaction-type.enum';
+import { ConfigService } from '@nestjs/config';
+import { TransactionState } from './enums/transaction-state.enum';
 
 @Controller()
 export class TransactionsController {
   private readonly logger = new Logger(TransactionsController.name);
 
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly tempTransactionsService: TempTransactionsService,
     private readonly transactionsService: TransactionsService,
@@ -58,6 +58,20 @@ export class TransactionsController {
     }
     const tx = await this.transactionsService.getTxById(transactionFilterDto);
     if (!tx) {
+      if (transactionFilterDto.id) {
+        const tempTx = await this.tempTransactionsService.getTxById(transactionFilterDto.id)
+        if (tempTx) {
+          return {
+            transaction: {
+              id: tempTx.uuid,
+              kind: tempTx.type,
+              status: TransactionState.incomplete,
+              // status_eta:
+
+            } as TransactionDto,
+          };
+        }
+      }
       return response.status(404);
     }
     return {

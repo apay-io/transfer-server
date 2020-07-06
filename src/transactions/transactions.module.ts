@@ -21,6 +21,7 @@ import { TransactionLogsService } from './transaction-logs.service';
     TransactionsController,
   ],
   exports: [
+    TempTransactionsService,
     TransactionsService,
   ],
   imports: [

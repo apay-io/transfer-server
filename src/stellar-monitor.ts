@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConfigService } from 'nestjs-config';
 import { StellarService } from './wallets/stellar.service';
 import { TransactionsController } from './transactions/transactions.controller';
 import { TransactionType } from './transactions/enums/transaction-type.enum';
 import { HttpService } from '@nestjs/common';
 import { RedisService } from 'nestjs-redis';
 import { TransactionsService } from './transactions/transactions.service';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Separate process, that sends notifications about incoming txns

@@ -2,12 +2,12 @@ import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { DoneCallback, Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 import { WalletFactoryService } from '../wallets/wallet-factory.service';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { TransactionLog } from './transaction-log.entity';
 import { TransactionLogsService } from './transaction-logs.service';
 import { StellarService } from '../wallets/stellar.service';
 import { TransactionType } from './enums/transaction-type.enum';
 import { BigNumber } from 'bignumber.js';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Worker responsible for signing prepared stellar transactions
@@ -22,7 +22,6 @@ export class SignProcessor {
   private readonly logger = new Logger(SignProcessor.name);
 
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly stellarService: StellarService,
     private readonly transactionLogsService: TransactionLogsService,

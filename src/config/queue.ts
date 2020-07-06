@@ -1,4 +1,6 @@
-export default {
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('queue', () => ({
   defaultJobOptions: () => {
     return process.env.NODE_ENV === 'production'
       ? {
@@ -13,4 +15,4 @@ export default {
       stackTraceLimit: 1,
     };
   },
-};
+}));

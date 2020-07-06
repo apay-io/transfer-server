@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Header, Post, Req, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
-import { ConfigService, InjectConfig } from 'nestjs-config';
 import { WalletFactoryService } from './wallets/wallet-factory.service';
 import { TransactionType } from './transactions/enums/transaction-type.enum';
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class AppController {
   constructor(
-    @InjectConfig()
     private readonly config: ConfigService,
     private readonly appService: AppService,
     private readonly walletFactory: WalletFactoryService,
@@ -64,22 +63,23 @@ export class AppController {
       response.deposit[asset.code] = {
         enabled: asset.stellar.status === 'live',
         ...(asset.deposit ? {
+          authentication_required: asset.deposit.authentication_required,
           fee_fixed: asset.deposit.fee_fixed,
           fee_percent: asset.deposit.fee_percent,
           min_amount: asset.deposit.min,
           max_amount: asset.deposit.max,
+          fields: asset.deposit.fields,
         } : {}),
       };
       response.withdraw[asset.code] = {
         enabled: asset.stellar.status === 'live',
         ...(asset.withdrawal ? {
+          authentication_required: asset.withdrawal.authentication_required,
           fee_fixed: asset.withdrawal.fee_fixed,
           fee_percent: asset.withdrawal.fee_percent,
           min_amount: asset.withdrawal.min,
           max_amount: asset.withdrawal.max,
-          types: {
-            crypto: {},
-          },
+          types: asset.withdrawal.types,
         } : {}),
       };
     }

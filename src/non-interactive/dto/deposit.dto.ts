@@ -3,7 +3,17 @@
 import { IsKnownAsset } from '../../validators/known-asset.validator';
 import { IsStellarAccount } from '../../validators/stellar-account.validator';
 import { MemoType, MemoNone, MemoID, MemoText, MemoHash, MemoReturn } from 'stellar-sdk';
-import { IsIn, IsEmail, IsAlpha, Length, IsUrl, IsAlphanumeric, IsOptional, ValidateIf } from 'class-validator';
+import {
+  IsIn,
+  IsEmail,
+  IsAlpha,
+  Length,
+  IsUrl,
+  IsAlphanumeric,
+  IsOptional,
+  ValidateIf,
+  IsPositive, IsNumberString
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsStellarMemo } from '../../validators/stellar-memo.validator';
 import { IsKnownAssetIssuer } from '../../validators/known-asset-issuer.validator';
@@ -15,6 +25,10 @@ export class DepositDto {
   @IsKnownAssetIssuer()
   @IsOptional()
   readonly asset_issuer?: string; // currently not in use, but required by the standard
+  @IsNumberString()
+  @IsPositive()
+  @IsOptional()
+  readonly amount?: number;
   @IsStellarAccount()
   readonly account: string;
   @Transform(value => value.toLowerCase())

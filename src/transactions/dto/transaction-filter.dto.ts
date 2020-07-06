@@ -1,5 +1,5 @@
 /* tslint:disable:variable-name */
-import { IsHash, IsOptional, IsUUID, ValidateIf } from 'class-validator';
+import { IsHash, IsOptional, IsUUID } from 'class-validator';
 
 export class TransactionFilterDto {
   @IsUUID()
