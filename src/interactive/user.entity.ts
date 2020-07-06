@@ -6,10 +6,8 @@ import {
   Generated,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne
 } from 'typeorm';
 import { TrimStringTransformer } from '../transformers/trim-string.transformer';
-import { DepositMapping } from '../non-interactive/address-mapping.entity';
 import { Account } from './account.entity';
 
 export enum UserRole {

@@ -3,9 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TempTransaction } from './temp-transaction.entity';
 import { Repository } from 'typeorm';
 import { TxNotificationDto } from './dto/tx-notification.dto';
-import { TransactionFilterDto } from './dto/transaction-filter.dto';
-import { Transaction } from './transaction.entity';
-import { TransactionType } from './enums/transaction-type.enum';
 
 @Injectable()
 export class TempTransactionsService {

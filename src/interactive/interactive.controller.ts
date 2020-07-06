@@ -7,7 +7,6 @@ import { TempTransactionsService } from '../transactions/temp-transactions.servi
 import { createHash } from 'crypto';
 import { TransactionType } from '../transactions/enums/transaction-type.enum';
 import { ConfigService } from '@nestjs/config';
-import { UserService } from './user.service';
 
 type InteractiveResponseType = 'interactive_customer_info_needed';
 
