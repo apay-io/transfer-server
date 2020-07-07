@@ -1,4 +1,17 @@
-import { Body, Controller, ForbiddenException, Get, Logger, Param, Post, Query, Res } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Logger,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards
+} from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionsService } from './transactions.service';
 import { TransactionDto } from './dto/transaction.dto';
@@ -11,6 +24,7 @@ import { Queue } from 'bull';
 import { TransactionType } from './enums/transaction-type.enum';
 import { ConfigService } from '@nestjs/config';
 import { TransactionState } from './enums/transaction-state.enum';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller()
 export class TransactionsController {
@@ -24,9 +38,28 @@ export class TransactionsController {
   ) {
   }
 
-  @Get('transactions')
-  async getTransactions(
+  @Get('sep-0006/transactions')
+  async getTransactionsSep6(
     @Query() transactionsFilterDto: TransactionsFilterDto,
+  ): Promise<{ transactions: TransactionDto[]}> {
+    if (!transactionsFilterDto.account) {
+      throw new BadRequestException(`Stellar account undefined is not valid`);
+    }
+    return this.getTransactionsInternal(transactionsFilterDto);
+  }
+
+  @Get('transactions')
+  @UseGuards(JwtAuthGuard)
+  async getTransactions(
+    @Req() req,
+    @Query() transactionsFilterDto: TransactionsFilterDto,
+  ): Promise<{ transactions: TransactionDto[]}> {
+    transactionsFilterDto.account = req.user.sub;
+    return this.getTransactionsInternal(transactionsFilterDto);
+  }
+
+  async getTransactionsInternal(
+    transactionsFilterDto: TransactionsFilterDto,
   ): Promise<{ transactions: TransactionDto[]}> {
     const txs = await this.transactionsService.find(transactionsFilterDto);
     return {
@@ -42,10 +75,27 @@ export class TransactionsController {
     };
   }
 
-  @Get('transaction')
-  async getTransaction(
+  @Get('sep-0006/transaction')
+  async getTransactionSep6(
     @Query() transactionFilterDto: TransactionFilterDto,
     @Res() response,
+  ): Promise<{ transaction: TransactionDto}> {
+    return this.getTransactionInternal(transactionFilterDto, response);
+  }
+
+  @Get('transaction')
+  @UseGuards(JwtAuthGuard)
+  async getTransaction(
+    @Req() req,
+    @Query() transactionFilterDto: TransactionFilterDto,
+    @Res() response,
+  ): Promise<{ transaction: TransactionDto}> {
+    return this.getTransactionInternal(transactionFilterDto, response);
+  }
+
+  async getTransactionInternal(
+    transactionFilterDto: TransactionFilterDto,
+    response,
   ): Promise<{ transaction: TransactionDto}> {
     if (
       !transactionFilterDto.id
