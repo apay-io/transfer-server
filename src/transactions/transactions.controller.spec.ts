@@ -92,7 +92,14 @@ describe('TransactionsController', () => {
 
   describe('/transaction', () => {
     it('should return 400 invalid params', async () => {
-      await expect(txsController.getTransactionSep6({} as TransactionFilterDto)).rejects.toThrow();
+      const response = {
+        status: () => null,
+        send: () => null,
+      };
+      const spy2 = spyOn(response, 'status').and.returnValue(response);
+
+      expect(await txsController.getTransactionSep6({} as TransactionFilterDto, response)).toBeFalsy();
+      expect(spy2.calls.argsFor(0)).toStrictEqual([400]);
     });
 
     it('should return 404 no matching tx', async () => {
