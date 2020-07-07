@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards
 } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
@@ -83,9 +84,17 @@ export class TransactionsController {
     return this.getTransactionInternal(transactionFilterDto);
   }
 
+  @Get('sep-0006/transaction')
+  async getTransactionSep6(
+    @Query() transactionFilterDto: TransactionFilterDto,
+    @Res() response,
+  ): Promise<{ transaction: TransactionDto}> {
+    return this.getTransactionInternal(transactionFilterDto, response);
+  }
+
   @Get('transaction')
   @UseGuards(JwtAuthGuard)
-  getTransaction(
+  async getTransaction(
     @Req() req,
     @Query() transactionFilterDto: TransactionFilterDto,
   ): Promise<{ transaction: TransactionDto}> {
@@ -94,6 +103,13 @@ export class TransactionsController {
 
   async getTransactionInternal(
     transactionFilterDto: TransactionFilterDto,
+  ): Promise<{ transaction: TransactionDto}> {
+    return this.getTransactionInternal(transactionFilterDto, response);
+  }
+
+  async getTransactionInternal(
+    transactionFilterDto: TransactionFilterDto,
+    response,
   ): Promise<{ transaction: TransactionDto}> {
     if (
       !transactionFilterDto.id
