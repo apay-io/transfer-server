@@ -43,6 +43,15 @@ describe('TransactionsController', () => {
   });
 
   describe('/transactions', () => {
+    it('should fail for invalid parameters', async () => {
+      const spy = spyOn(txsService, 'find').and.returnValue([]);
+
+      await expect(txsController.getTransactionsSep6({
+        asset_code: 'TEST',
+      } as TransactionsFilterDto)).rejects.toThrow();
+      expect(spy.calls.count()).toBe(0);
+    });
+
     it('should return empty array if no matching txs', async () => {
       const spy = spyOn(txsService, 'find').and.returnValue([]);
 
@@ -76,6 +85,17 @@ describe('TransactionsController', () => {
   });
 
   describe('/transaction', () => {
+    it('should return 400 invalid params', async () => {
+      const response = {
+        status: () => null,
+        send: () => null,
+      };
+      const spy2 = spyOn(response, 'status').and.returnValue(response);
+
+      expect(await txsController.getTransactionSep6({} as TransactionFilterDto, response)).toBeFalsy();
+      expect(spy2.calls.argsFor(0)).toStrictEqual([400]);
+    });
+
     it('should return 404 no matching tx', async () => {
       const spy = spyOn(txsService, 'getTxById').and.returnValue(null);
 
