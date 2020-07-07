@@ -14,7 +14,8 @@ export class TransactionsFilterDto {
   @IsOptional()
   readonly asset_issuer?: string; // currently not in use, but required by the standard
   @IsStellarAccount()
-  readonly account: string;
+  @IsOptional()
+  account: string; // mandatory for sep6, comes from JWT token for sep24
   @IsISO8601()
   @IsOptional()
   readonly no_older_than?: Date;

@@ -62,7 +62,7 @@ describe('AppController', () => {
       const response = appController.getStellarToml(fakeReq, res);
 
       expect(res.render).toHaveBeenCalledTimes(1);
-      expect(response).toContain('TRANSFER_SERVER="https://apay.io"');
+      expect(response).toContain('TRANSFER_SERVER="https://apay.io/sep-0006"');
       expect(response).toContain('SIGNING_KEY=');
       expect(response).toContain('[[CURRENCIES]]');
       expect(response).toContain('status="live"');

@@ -30,7 +30,7 @@ export class NonInteractiveController {
   ) {
   }
 
-  @Get('deposit')
+  @Get('sep-0006/deposit')
   depositSep6(@Query() depositDto: DepositDto): Promise<DepositResponseDto> {
     return this.depositInternal(depositDto);
   }
@@ -92,7 +92,7 @@ export class NonInteractiveController {
     };
   }
 
-  @Get('withdraw')
+  @Get('sep-0006/withdraw')
   withdrawSep6(@Query() withdrawDto: WithdrawDto): Promise<WithdrawalResponseDto> {
     return this.withdrawInternal(withdrawDto);
   }
