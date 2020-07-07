@@ -47,8 +47,9 @@ describe('TransactionsController', () => {
       const spy = spyOn(txsService, 'find').and.returnValue([]);
 
       expect(await txsController.getTransactions({
+        user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
+      }, {
         asset_code: 'TEST',
-        account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
       } as TransactionsFilterDto)).toStrictEqual({ transactions: []});
       expect(spy.calls.count()).toBe(1);
     });
@@ -61,6 +62,8 @@ describe('TransactionsController', () => {
         state: TransactionState.incomplete,
       }]);
       expect(await txsController.getTransactions({
+        user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
+      }, {
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
       } as TransactionsFilterDto)).toStrictEqual({ transactions: [{
@@ -82,6 +85,8 @@ describe('TransactionsController', () => {
       const spy2 = spyOn(response, 'status').and.returnValue(null);
 
       expect(await txsController.getTransaction({
+        user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
+      }, {
         id: '730fbf44-aa56-427b-97c1-12f054082251',
       } as TransactionFilterDto, response)).toBeFalsy();
       expect(spy.calls.count()).toBe(1);
@@ -101,6 +106,8 @@ describe('TransactionsController', () => {
       const spy2 = spyOn(response, 'status').and.returnValue(null);
 
       expect(await txsController.getTransaction({
+        user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
+      }, {
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
       } as TransactionFilterDto, response)).toStrictEqual({ transaction: {
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
