@@ -17,7 +17,7 @@ adjust values in `.env` and `assets.json` according to your preferences
 
 ```
 npm i
-npm run build:dev
+npm run build
 npm start
 ```
 

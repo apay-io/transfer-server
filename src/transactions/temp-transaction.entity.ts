@@ -29,6 +29,9 @@ export class TempTransaction {
   @Column({length: 255, nullable: false})
   asset: string;
 
+  @Column({length: 255, nullable: true})
+  account: string;
+
   @Column({
     type: 'enum',
     enum: [

@@ -4,7 +4,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
-  Logger,
+  Logger, NotFoundException,
   Param,
   Post,
   Query,
@@ -25,6 +25,8 @@ import { TransactionType } from './enums/transaction-type.enum';
 import { ConfigService } from '@nestjs/config';
 import { TransactionState } from './enums/transaction-state.enum';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { TempTransaction } from './temp-transaction.entity';
+import { NotFoundError } from 'stellar-sdk';
 
 @Controller()
 export class TransactionsController {
@@ -62,76 +64,59 @@ export class TransactionsController {
     transactionsFilterDto: TransactionsFilterDto,
   ): Promise<{ transactions: TransactionDto[]}> {
     const txs = await this.transactionsService.find(transactionsFilterDto);
-    return {
-      transactions: txs.map((tx: Transaction) => {
-        return {
-          id: tx.uuid,
-          kind: tx.type,
-          status: tx.state,
-          // status_eta:
+    const tempTxs = await this.tempTransactionsService.find(transactionsFilterDto);
 
-        } as TransactionDto;
-      }),
+    const result = tempTxs.map((tempTx: TempTransaction) => {
+      return this.tempTxToTransactionDto(tempTx);
+    }).concat(txs.map((tx: Transaction) => {
+      return this.txToTransactionDto(tx);
+    }));
+
+    return {
+      transactions: result,
     };
   }
 
   @Get('sep-0006/transaction')
-  async getTransactionSep6(
+  getTransactionSep6(
     @Query() transactionFilterDto: TransactionFilterDto,
-    @Res() response,
   ): Promise<{ transaction: TransactionDto}> {
-    return this.getTransactionInternal(transactionFilterDto, response);
+    return this.getTransactionInternal(transactionFilterDto);
   }
 
   @Get('transaction')
   @UseGuards(JwtAuthGuard)
-  async getTransaction(
+  getTransaction(
     @Req() req,
     @Query() transactionFilterDto: TransactionFilterDto,
-    @Res() response,
   ): Promise<{ transaction: TransactionDto}> {
-    return this.getTransactionInternal(transactionFilterDto, response);
+    return this.getTransactionInternal(transactionFilterDto);
   }
 
   async getTransactionInternal(
     transactionFilterDto: TransactionFilterDto,
-    response,
   ): Promise<{ transaction: TransactionDto}> {
     if (
       !transactionFilterDto.id
       && !transactionFilterDto.stellar_transaction_id
       && !transactionFilterDto.external_transaction_id
     ) {
-      return response.status(400).send({
-        error: 'At least one filter must be specified id, stellar_transaction_id or external_transaction_id',
-      });
+      throw new BadRequestException(
+        'At least one filter must be specified id, stellar_transaction_id or external_transaction_id'
+      );
     }
     const tx = await this.transactionsService.getTxById(transactionFilterDto);
     if (!tx) {
-      if (transactionFilterDto.id) {
-        const tempTx = await this.tempTransactionsService.getTxById(transactionFilterDto.id)
-        if (tempTx) {
-          return {
-            transaction: {
-              id: tempTx.uuid,
-              kind: tempTx.type,
-              status: TransactionState.incomplete,
-              // status_eta:
-
-            } as TransactionDto,
-          };
-        }
+      const tempTx = await this.tempTransactionsService.getTxById(transactionFilterDto)
+      if (tempTx) {
+        return {
+          transaction: this.tempTxToTransactionDto(tempTx)
+        };
       }
-      return response.status(404);
+      throw new NotFoundException('Transaction not found');
     }
     return {
-      transaction: {
-        id: tx.uuid,
-        kind: tx.type,
-        status: tx.state,
-        // status_eta:
-
-      } as TransactionDto,
+      transaction: this.txToTransactionDto(tx),
     };
   }
 
@@ -171,5 +156,54 @@ export class TransactionsController {
       ...this.config.get('queue').defaultJobOptions,
       timeout: 60000 * 5, // 5 min
     });
+  }
+
+  private txToTransactionDto(tx: Transaction) {
+    const lastLog = tx.logs.find((item) => item.state === 'submitting');
+    return {
+      id: tx.uuid,
+      kind: tx.type,
+      status: tx.state,
+      amount_in: tx.amountIn.toFixed(7),
+      amount_out: tx.amountOut.toFixed(7),
+      amount_fee: tx.amountFee.toFixed(7),
+      started_at: tx.createdAt,
+      completed_at: lastLog.processedAt,
+      stellar_transaction_id: (tx.type === TransactionType.deposit ? tx.txOut : tx.txIn),
+      refunded: tx.refunded,
+      from: tx.addressFrom,
+      to: tx.addressOut,
+      more_info_url: this.config.get<string>('app.frontUrl') + `/tx/${tx.uuid}`,
+
+      ...(tx.type === TransactionType.deposit ? {} : {
+        withdraw_anchor_account: tx.addressIn,
+        withdraw_memo: tx.addressInExtra,
+        withdraw_memo_type: 'id',
+      })
+    } as TransactionDto;
+  }
+
+  private tempTxToTransactionDto(tempTx: TempTransaction) {
+    return {
+      id: tempTx.uuid,
+      kind: tempTx.type,
+      status: TransactionState.incomplete,
+      amount_in: null,
+      amount_out: null,
+      amount_fee: null,
+      started_at: tempTx.createdAt,
+      completed_at: null,
+      stellar_transaction_id: null,
+      refunded: false,
+      from: null,
+      to: null,
+      more_info_url: this.config.get<string>('app.frontUrl') + `/tx/${tempTx.uuid}`,
+
+      ...(tempTx.type === TransactionType.deposit ? {} : {
+        withdraw_anchor_account: null,
+        withdraw_memo: null,
+        withdraw_memo_type: 'id',
+      })
+    } as TransactionDto;
   }
 }

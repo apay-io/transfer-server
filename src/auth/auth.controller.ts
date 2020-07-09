@@ -65,14 +65,10 @@ export class AuthController {
               [clientAccountID]
             );
           } catch (error) {
-            throw new BadRequestException({
-              error: error.message
-            });
+            throw new BadRequestException(error);
           }
         } else {
-          throw new BadRequestException({
-            error: err.message
-          });
+          throw new BadRequestException(err);
         }
       }
     }
