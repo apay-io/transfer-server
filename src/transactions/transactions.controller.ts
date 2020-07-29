@@ -4,7 +4,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
-  Logger, 
+  Logger,
   NotFoundException,
   Param,
   Post,
@@ -95,13 +95,6 @@ export class TransactionsController {
 
   async getTransactionInternal(
     transactionFilterDto: TransactionFilterDto,
-  ): Promise<{ transaction: TransactionDto}> {
-    return this.getTransactionInternal(transactionFilterDto, response);
-  }
-
-  async getTransactionInternal(
-    transactionFilterDto: TransactionFilterDto,
-    response,
   ): Promise<{ transaction: TransactionDto}> {
     if (
       !transactionFilterDto.id
