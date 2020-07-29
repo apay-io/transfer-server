@@ -8,6 +8,7 @@ import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { TempTransactionsService } from './temp-transactions.service';
 import { QueuesModule } from '../queues/queues.module';
 import { ConfigModule } from '@nestjs/config';
+import { BigNumber } from 'bignumber.js';
 
 const mockService = jest.fn(() => ({
   find: () => [],
@@ -15,6 +16,7 @@ const mockService = jest.fn(() => ({
   getTxById: () => null,
 }));
 const mockTempService = jest.fn(() => ({
+  find: () => [],
   getTxById: () => null,
   save: (chain, dto) => dto,
 }));
@@ -69,13 +71,17 @@ describe('TransactionsController', () => {
         uuid: '730fbf44-aa56-427b-97c1-12f05408225d',
         type: TransactionType.deposit,
         state: TransactionState.incomplete,
+        amountIn: new BigNumber(0),
+        amountOut: new BigNumber(0),
+        amountFee: new BigNumber(0),
+        logs: [],
       }]);
       expect(await txsController.getTransactions({
         user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
       }, {
         asset_code: 'TEST',
         account: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV',
-      } as TransactionsFilterDto)).toStrictEqual({ transactions: [{
+      } as TransactionsFilterDto)).toMatchObject({ transactions: [{
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
         kind: 'deposit',
         status: 'incomplete',
@@ -86,31 +92,18 @@ describe('TransactionsController', () => {
 
   describe('/transaction', () => {
     it('should return 400 invalid params', async () => {
-      const response = {
-        status: () => null,
-        send: () => null,
-      };
-      const spy2 = spyOn(response, 'status').and.returnValue(response);
-
-      expect(await txsController.getTransactionSep6({} as TransactionFilterDto, response)).toBeFalsy();
-      expect(spy2.calls.argsFor(0)).toStrictEqual([400]);
+      await expect(txsController.getTransactionSep6({} as TransactionFilterDto)).rejects.toThrow();
     });
 
     it('should return 404 no matching tx', async () => {
       const spy = spyOn(txsService, 'getTxById').and.returnValue(null);
 
-      const response = {
-        status: () => null,
-      };
-      const spy2 = spyOn(response, 'status').and.returnValue(null);
-
-      expect(await txsController.getTransaction({
+      await expect(txsController.getTransaction({
         user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
       }, {
         id: '730fbf44-aa56-427b-97c1-12f054082251',
-      } as TransactionFilterDto, response)).toBeFalsy();
+      } as TransactionFilterDto)).rejects.toThrow();
       expect(spy.calls.count()).toBe(1);
-      expect(spy2.calls.argsFor(0)).toStrictEqual([404]);
     });
 
     it('should map data correctly', async () => {
@@ -119,23 +112,22 @@ describe('TransactionsController', () => {
         uuid: '730fbf44-aa56-427b-97c1-12f05408225d',
         type: TransactionType.deposit,
         state: TransactionState.incomplete,
+        amountIn: new BigNumber(0),
+        amountOut: new BigNumber(0),
+        amountFee: new BigNumber(0),
+        logs: [],
       });
-      const response = {
-        status: () => null,
-      };
-      const spy2 = spyOn(response, 'status').and.returnValue(null);
 
       expect(await txsController.getTransaction({
         user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
       }, {
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
-      } as TransactionFilterDto, response)).toStrictEqual({ transaction: {
+      } as TransactionFilterDto)).toMatchObject({ transaction: {
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
         kind: 'deposit',
         status: 'incomplete',
       }});
       expect(spy.calls.count()).toBe(1);
-      expect(spy2.calls.count()).toBe(0);
     });
   });
 });
