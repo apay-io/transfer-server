@@ -92,7 +92,7 @@ describe('TransactionsController', () => {
 
   describe('/transaction', () => {
     it('should return 400 invalid params', async () => {
-      expect(await txsController.getTransactionSep6({} as TransactionFilterDto)).toBeFalsy();
+      await expect(txsController.getTransactionSep6({} as TransactionFilterDto)).rejects.toThrow();
     });
 
     it('should return 404 no matching tx', async () => {
