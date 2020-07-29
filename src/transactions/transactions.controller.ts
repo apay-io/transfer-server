@@ -10,7 +10,6 @@ import {
   Post,
   Query,
   Req,
-  Res,
   UseGuards
 } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';

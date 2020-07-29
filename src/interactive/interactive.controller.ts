@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards, UseInterceptors, Res, HttpCode } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, UseInterceptors, HttpCode } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { DepositDto } from '../non-interactive/dto/deposit.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
