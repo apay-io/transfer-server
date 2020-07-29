@@ -4,7 +4,8 @@ import {
   Controller,
   ForbiddenException,
   Get,
-  Logger, NotFoundException,
+  Logger, 
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -26,7 +27,6 @@ import { ConfigService } from '@nestjs/config';
 import { TransactionState } from './enums/transaction-state.enum';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TempTransaction } from './temp-transaction.entity';
-import { NotFoundError } from 'stellar-sdk';
 
 @Controller()
 export class TransactionsController {
@@ -95,6 +95,13 @@ export class TransactionsController {
 
   async getTransactionInternal(
     transactionFilterDto: TransactionFilterDto,
+  ): Promise<{ transaction: TransactionDto}> {
+    return this.getTransactionInternal(transactionFilterDto, response);
+  }
+
+  async getTransactionInternal(
+    transactionFilterDto: TransactionFilterDto,
+    response,
   ): Promise<{ transaction: TransactionDto}> {
     if (
       !transactionFilterDto.id
