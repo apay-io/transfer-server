@@ -22,7 +22,7 @@ jobs:
           paths: ./*
 
 orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
+  sonarcloud: sonarsource/sonarcloud@1.0.2
 
 workflows:
   version: 2
