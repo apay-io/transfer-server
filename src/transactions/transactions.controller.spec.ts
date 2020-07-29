@@ -87,31 +87,18 @@ describe('TransactionsController', () => {
 
   describe('/transaction', () => {
     it('should return 400 invalid params', async () => {
-      const response = {
-        status: () => null,
-        send: () => null,
-      };
-      const spy2 = spyOn(response, 'status').and.returnValue(response);
-
-      expect(await txsController.getTransactionSep6({} as TransactionFilterDto, response)).toBeFalsy();
-      expect(spy2.calls.argsFor(0)).toStrictEqual([400]);
+      expect(await txsController.getTransactionSep6({} as TransactionFilterDto)).toBeFalsy();
     });
 
     it('should return 404 no matching tx', async () => {
       const spy = spyOn(txsService, 'getTxById').and.returnValue(null);
 
-      const response = {
-        status: () => null,
-      };
-      const spy2 = spyOn(response, 'status').and.returnValue(null);
-
       expect(await txsController.getTransaction({
         user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
       }, {
         id: '730fbf44-aa56-427b-97c1-12f054082251',
-      } as TransactionFilterDto, response)).toBeFalsy();
+      } as TransactionFilterDto)).toBeFalsy();
       expect(spy.calls.count()).toBe(1);
-      expect(spy2.calls.argsFor(0)).toStrictEqual([404]);
     });
 
     it('should map data correctly', async () => {
@@ -121,22 +108,17 @@ describe('TransactionsController', () => {
         type: TransactionType.deposit,
         state: TransactionState.incomplete,
       });
-      const response = {
-        status: () => null,
-      };
-      const spy2 = spyOn(response, 'status').and.returnValue(null);
 
       expect(await txsController.getTransaction({
         user: { sub: 'GAY5RGI5K3EAZFKV4JRDKU4I3HADEGIVWNYIS34DMUMCKZGG4HFWXZXV' }
       }, {
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
-      } as TransactionFilterDto, response)).toStrictEqual({ transaction: {
+      } as TransactionFilterDto)).toStrictEqual({ transaction: {
         id: '730fbf44-aa56-427b-97c1-12f05408225d',
         kind: 'deposit',
         status: 'incomplete',
       }});
       expect(spy.calls.count()).toBe(1);
-      expect(spy2.calls.count()).toBe(0);
     });
   });
 });
