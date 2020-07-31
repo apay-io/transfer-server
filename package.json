@@ -64,7 +64,7 @@
     "@types/jest": "26.0.4",
     "@types/node": "12.12.52",
     "@types/passport-jwt": "3.0.3",
-    "@types/supertest": "2.0.9",
+    "@types/supertest": "2.0.10",
     "axios": "0.19.2",
     "jest": "26.1.0",
     "prettier": "2.0.5",
