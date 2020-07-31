@@ -42,7 +42,7 @@
     "bull": "3.16.0",
     "class-transformer": "0.3.1",
     "class-validator": "0.12.2",
-    "express-handlebars": "5.0.0",
+    "express-handlebars": "5.1.0",
     "express-rate-limit": "typescript",
     "hbs": "4.1.1",
     "lodash.groupby": "4.6.0",
