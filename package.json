@@ -76,7 +76,7 @@
     "tsconfig-paths": "3.9.0",
     "tslint": "6.1.2",
     "typescript": "3.9.7",
-    "webpack-node-externals": "1.7.2"
+    "webpack-node-externals": "2.5.2"
   },
   "jest": {
     "moduleFileExtensions": [
