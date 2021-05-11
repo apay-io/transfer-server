@@ -51,7 +51,7 @@
     "passport-jwt": "4.0.0",
     "pg": "8.6.0",
     "rxjs": "7.0.0",
-    "stellar-sdk": "5.0.3",
+    "stellar-sdk": "5.0.4",
     "typeorm": "0.2.32"
   },
   "devDependencies": {
