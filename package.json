@@ -44,7 +44,7 @@
     "class-validator": "0.12.2",
     "express-handlebars": "5.1.0",
     "express-rate-limit": "typescript",
-    "hbs": "4.1.1",
+    "hbs": "4.1.2",
     "lodash.groupby": "4.6.0",
     "nestjs-redis": "1.2.8",
     "passport": "0.4.1",
