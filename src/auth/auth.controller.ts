@@ -34,7 +34,8 @@ export class AuthController {
         challengeRequest.account,
         this.config.get('app').appName,
         300,
-        networkPassphrase
+        networkPassphrase,
+        this.config.get('app').appName,
       ),
       network_passphrase: networkPassphrase,
     };
@@ -45,7 +46,13 @@ export class AuthController {
   async token(@Body() dto: TokenRequest): Promise<TokenResponse> {
     const networkPassphrase = this.config.get('stellar').networkPassphrase;
     const signingKey = this.config.get('stellar').signingKey;
-    const { clientAccountID } = Utils.readChallengeTx(dto.transaction, signingKey, networkPassphrase);
+    const { clientAccountID } = Utils.readChallengeTx(
+      dto.transaction,
+      signingKey,
+      networkPassphrase,
+      this.config.get('app').appName,
+      this.config.get('app').appName,
+    );
     if (!this.config.get('TESTING_AUTH_DONT_VERIFY')) {
       try {
         const userAccount = await this.stellarService.getServer(networkPassphrase).loadAccount(clientAccountID);
@@ -54,7 +61,9 @@ export class AuthController {
           signingKey,
           networkPassphrase,
           userAccount.thresholds.med_threshold,
-          userAccount.signers
+          userAccount.signers,
+          this.config.get('app').appName,
+          this.config.get('app').appName,
         );
       } catch (err) {
         if (err.name === 'NotFoundError') {
@@ -63,7 +72,9 @@ export class AuthController {
               dto.transaction,
               signingKey,
               networkPassphrase,
-              [clientAccountID]
+              [clientAccountID],
+              this.config.get('app').appName,
+              this.config.get('app').appName,
             );
           } catch (error) {
             throw new BadRequestException(error);

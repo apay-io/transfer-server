@@ -67,7 +67,7 @@ describe('AuthController', () => {
 
       const result = await authController.challenge({ account: userAccount });
       expect(result.network_passphrase).toBe(Networks.TESTNET);
-      expect(result.transaction.startsWith('AAAAANSVGgwHBcNswo+E+Rozh1Orysb11tcU130sxoaeLEDKAAAAZAAAAAAAAAAAAAAAAQAAAABbOdq/AAAAAFs52+sAAAAAAAAAAQAAAAEAAAAAra5I3emuoaB1SwYQ297p5fvnkI5KGS2Oj0Mwg283cDMAAAAKAAAAD')).toBeTruthy();
+      expect(result.transaction.startsWith('AAAAAgAAAADUlRoMBwXDbMKPhPkaM4dTq8rG9dbXFNd9LMaGnixAygAAAMgAAAAAAAAAAAAAAAEAAAAAWznavwAAAABbOdvrAAAAAAAAAAIAAAABAAAAAK2uSN3prqGgdUsGENve6eX755COShktjo9DMINvN3AzAAAACgAAAAxhcGF5LmlvIGF1dGgAAAABAAAAQ')).toBeTruthy();
     });
 
     it('should validate signed token', async () => {
