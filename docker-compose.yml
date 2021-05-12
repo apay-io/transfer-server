@@ -29,7 +29,7 @@ services:
       - webnet
   transfer-server-postgres:
     container_name: transfer-server-postgres
-    image: postgres:12
+    image: postgres:13
     networks:
       - webnet
     environment:
