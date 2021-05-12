@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { StellarService } from '../wallets/stellar.service';
 import { Utils, Keypair } from 'stellar-sdk';
@@ -41,6 +41,7 @@ export class AuthController {
   }
 
   @Post()
+  @HttpCode(200)
   async token(@Body() dto: TokenRequest): Promise<TokenResponse> {
     const networkPassphrase = this.config.get('stellar').networkPassphrase;
     const signingKey = this.config.get('stellar').signingKey;
