@@ -8,3 +8,5 @@ Dockerfile
 config/*
 .idea
 *.env
+*.yaml
+*.yml

@@ -5,12 +5,13 @@ import {
   ForbiddenException,
   Get,
   Logger,
-  NotFoundException,
+
   Param,
   Post,
   Query,
   Req,
-  UseGuards
+  UseGuards,
+  NotFoundException
 } from '@nestjs/common';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { TransactionsService } from './transactions.service';
@@ -85,7 +86,7 @@ export class TransactionsController {
 
   @Get('transaction')
   @UseGuards(JwtAuthGuard)
-  getTransaction(
+  async getTransaction(
     @Req() req,
     @Query() transactionFilterDto: TransactionFilterDto,
   ): Promise<{ transaction: TransactionDto}> {
