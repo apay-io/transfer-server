@@ -41,7 +41,7 @@
     "@nestjs/typeorm": "7.1.5",
     "bull": "3.22.5",
     "class-transformer": "0.3.1",
-    "class-validator": "0.13.1",
+    "class-validator": "0.14.0",
     "express-handlebars": "5.3.2",
     "express-rate-limit": "typescript",
     "hbs": "4.1.2",
